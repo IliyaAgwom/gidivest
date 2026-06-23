@@ -13,7 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Deposits", href: "/admin/deposits", icon: <ArrowDownToLine className="w-5 h-5" /> },
     { name: "Withdrawals", href: "/admin/withdrawals", icon: <ArrowUpFromLine className="w-5 h-5" /> },
     { name: "Mailing", href: "/admin/mail", icon: <Mail className="w-5 h-5" /> },
-    { name: "Settings", href: "#", icon: <Settings className="w-5 h-5" /> },
+    { name: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
   ];
 
   return (
