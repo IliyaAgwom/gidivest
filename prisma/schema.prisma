@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TxStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TxType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  name          String?
+  role          Role     @default(USER)
+  banned        Boolean  @default(false)
+  walletBalance Float    @default(0.0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  portfolios    Portfolio[]
+  transactions  Transaction[]
+  notifications Notification[]
+  investments   UserInvestment[]
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  type          TxType
+  amount        Float
+  cryptoType    String   // e.g., "BTC", "ETH", "USDT"
+  walletAddress String?  // For withdrawals, where to send. For deposits, where they sent it.
+  txHash        String?  // Transaction hash provided by user for deposits
+  status        TxStatus @default(PENDING)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Portfolio {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  totalValue  Float    @default(0.0)
+  profit      Float    @default(0.0) // Admin controlled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AdminSetting {
+  id                String @id @default(uuid())
+  btcAddress        String @default("bc1q...")
+  ethAddress        String @default("0x...")
+  usdtAddress       String @default("0x...")
+  investmentPercent Float  @default(10.0)
+}
+
+model UserInvestment {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  assetName   String
+  assetSymbol String
+  amount      Float
+  term        String   // "Short", "Medium", "Long"
+  status      String   @default("ACTIVE") // ACTIVE, CLOSED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
