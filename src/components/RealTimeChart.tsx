@@ -59,7 +59,7 @@ export default function RealTimeChart({ symbol, basePrice }: { symbol: string, b
           <Tooltip 
             contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
             itemStyle={{ color: '#10b981' }}
-            formatter={(val: number) => [`$${val.toFixed(2)}`, 'Price']}
+            formatter={(val: number | string | undefined) => val != null ? [`$${Number(val).toFixed(2)}`, 'Price'] : ['', 'Price']}
           />
           <Area 
             type="monotone" 
