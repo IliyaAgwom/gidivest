@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "hugvest-secret-key-2024");
-
 export async function middleware(req: NextRequest) {
+  const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "hugvest-secret-key-2024");
   const token = req.cookies.get("hv_session")?.value;
   const { pathname } = req.nextUrl;
 
