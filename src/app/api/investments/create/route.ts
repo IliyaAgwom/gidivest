@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { payload } = await jwtVerify(token, SECRET);
-    const userId = payload.userId as string;
+    const userId = payload.id as string;
 
     const { assetSymbol, assetName, amount, term } = await req.json();
 
