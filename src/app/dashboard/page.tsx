@@ -14,12 +14,22 @@ type Transaction = {
   createdAt: string;
 };
 
+type UserInvestment = {
+  id: string;
+  assetName: string;
+  assetSymbol: string;
+  amount: number;
+  term: string;
+  createdAt: string;
+};
+
 type UserData = {
   name: string;
   email: string;
   walletBalance: number;
   portfolio: { totalValue: number; profit: number };
   transactions: Transaction[];
+  investments: UserInvestment[];
 };
 
 export default function DashboardOverview() {
@@ -37,6 +47,28 @@ export default function DashboardOverview() {
   }, []);
 
   const firstName = user?.name?.split(" ")[0] || "Investor";
+
+  const sellInvestment = async (investmentId: string) => {
+    if (!confirm("Are you sure you want to sell this investment? The original amount plus profit will be added to your wallet.")) return;
+    
+    try {
+      const res = await fetch("/api/investments/sell", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ investmentId }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      alert(`Investment sold successfully! \n\nPayout: $${data.payout.toLocaleString("en-US", { minimumFractionDigits: 2 })} \nProfit: $${data.profit.toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
+      
+      // Reload dashboard data
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message || "Failed to sell investment");
+    }
+  };
 
   if (loading) {
     return (
@@ -115,6 +147,43 @@ export default function DashboardOverview() {
           </h3>
         </div>
       </div>
+
+      {/* Active Investments */}
+      {user?.investments && user.investments.length > 0 && (
+        <div className="bg-white dark:bg-navy-800 rounded-2xl border border-navy-200 dark:border-navy-700 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-navy-200 dark:border-navy-700">
+            <h3 className="text-lg font-bold text-navy-900 dark:text-white">Your Active Investments</h3>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 gap-4">
+              {user.investments.map((inv) => (
+                <div key={inv.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-navy-50 dark:bg-navy-900 rounded-xl border border-navy-100 dark:border-navy-700">
+                  <div className="mb-4 md:mb-0">
+                    <div className="flex items-center space-x-2">
+                      <h4 className="text-lg font-bold text-navy-900 dark:text-white">{inv.assetName}</h4>
+                      <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 rounded-full">
+                        {inv.assetSymbol}
+                      </span>
+                    </div>
+                    <p className="text-sm text-navy-500 dark:text-navy-400 mt-1">
+                      Invested: <span className="font-semibold text-navy-900 dark:text-white">${inv.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> • Term: {inv.term}
+                    </p>
+                    <p className="text-xs text-navy-400 dark:text-navy-500 mt-1">
+                      Started: {new Date(inv.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => sellInvestment(inv.id)}
+                    className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors w-full md:w-auto"
+                  >
+                    Sell Investment
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Trending Investments Section */}
       <TrendingInvestments userBalance={user?.walletBalance ?? 0} />

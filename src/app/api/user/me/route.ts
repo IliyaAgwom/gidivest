@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
     role: user.role,
     walletBalance: user.walletBalance,
     portfolio,
+    investments: user.investments,
     transactions: user.transactions,
   });
 }
