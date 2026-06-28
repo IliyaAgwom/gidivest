@@ -12,6 +12,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<any>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     fetch("/api/user/me")
       .then((r) => r.json())
@@ -39,16 +41,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     : "HV";
 
   return (
-    <div className="flex h-screen bg-navy-50 dark:bg-navy-900">
+    <div className="flex h-screen bg-navy-50 dark:bg-navy-900 relative">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-navy-800 border-r border-navy-200 dark:border-navy-700 flex-col hidden md:flex">
-        <div className="p-6">
+      <aside className={`fixed md:static inset-y-0 left-0 w-64 bg-white dark:bg-navy-800 border-r border-navy-200 dark:border-navy-700 flex-col z-30 transform transition-transform duration-300 ease-in-out md:transform-none md:flex ${
+        isMobileMenuOpen ? "translate-x-0 flex" : "-translate-x-full hidden md:flex"
+      }`}>
+        <div className="p-6 flex justify-between items-center">
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
               <span className="text-white font-bold text-xl leading-none">H</span>
             </div>
             <span className="text-xl font-bold text-navy-900 dark:text-white tracking-tight">HughVest</span>
           </Link>
+          <button className="md:hidden text-navy-500" onClick={() => setIsMobileMenuOpen(false)}>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
         {/* User info */}
@@ -64,13 +79,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1">
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
                     ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-semibold"
@@ -97,21 +113,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <header className="h-16 bg-white dark:bg-navy-800 border-b border-navy-200 dark:border-navy-700 flex items-center justify-between px-8 sticky top-0 z-10">
-          <h2 className="text-lg font-semibold text-navy-900 dark:text-white">Investor Dashboard</h2>
+      <main className="flex-1 overflow-y-auto w-full">
+        <header className="h-16 bg-white dark:bg-navy-800 border-b border-navy-200 dark:border-navy-700 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full">
+          <div className="flex items-center gap-3">
+            <button 
+              className="md:hidden text-navy-600 dark:text-navy-300"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <h2 className="text-lg font-semibold text-navy-900 dark:text-white truncate">Dashboard</h2>
+          </div>
           <div className="flex items-center space-x-4">
             <div className="hidden sm:block">
               <WeatherWidget />
             </div>
-            <span className="text-sm text-navy-600 dark:text-navy-400 hidden sm:block font-medium border-l border-navy-200 dark:border-navy-700 pl-4">{user?.name}</span>
-            <Link href="/dashboard/profile" className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold hover:bg-emerald-700 transition-colors shadow-sm">
+            <span className="text-sm text-navy-600 dark:text-navy-400 hidden sm:block font-medium border-l border-navy-200 dark:border-navy-700 pl-4 truncate">{user?.name}</span>
+            <Link href="/dashboard/profile" className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold hover:bg-emerald-700 transition-colors shadow-sm shrink-0">
               {initials}
             </Link>
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 md:p-8 w-full max-w-full overflow-x-hidden">
           {children}
         </div>
       </main>

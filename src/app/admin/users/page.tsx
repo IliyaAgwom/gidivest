@@ -76,7 +76,7 @@ export default function AdminUsersPage() {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[800px]">
             <thead>
               <tr className="text-navy-400 text-sm border-b border-navy-700">
                 <th className="p-4 font-medium">Name</th>

@@ -195,43 +195,45 @@ export default function DashboardOverview() {
         </div>
         <div className="p-6">
           {user?.transactions && user.transactions.length > 0 ? (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-navy-500 dark:text-navy-400 text-sm border-b border-navy-100 dark:border-navy-700">
-                  <th className="pb-3 font-medium">Type</th>
-                  <th className="pb-3 font-medium">Asset</th>
-                  <th className="pb-3 font-medium">Amount</th>
-                  <th className="pb-3 font-medium">Date</th>
-                  <th className="pb-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-navy-100 dark:divide-navy-700">
-                {user.transactions.map((tx) => (
-                  <tr key={tx.id}>
-                    <td className="py-4 text-navy-900 dark:text-white font-medium flex items-center">
-                      {tx.type === "DEPOSIT" ? (
-                        <ArrowDownToLine className="w-4 h-4 mr-2 text-emerald-500" />
-                      ) : (
-                        <ArrowUpFromLine className="w-4 h-4 mr-2 text-red-400" />
-                      )}
-                      {tx.type === "DEPOSIT" ? "Deposit" : "Withdrawal"}
-                    </td>
-                    <td className="py-4 text-navy-600 dark:text-navy-400 font-medium">{tx.cryptoType}</td>
-                    <td className="py-4 text-navy-900 dark:text-white font-medium">
-                      ${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-4 text-navy-600 dark:text-navy-400">
-                      {new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </td>
-                    <td className="py-4">
-                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusColors[tx.status] || ""}`}>
-                        {tx.status.charAt(0) + tx.status.slice(1).toLowerCase()}
-                      </span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[600px]">
+                <thead>
+                  <tr className="text-navy-500 dark:text-navy-400 text-sm border-b border-navy-100 dark:border-navy-700">
+                    <th className="pb-3 font-medium">Type</th>
+                    <th className="pb-3 font-medium">Asset</th>
+                    <th className="pb-3 font-medium">Amount</th>
+                    <th className="pb-3 font-medium">Date</th>
+                    <th className="pb-3 font-medium">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-navy-100 dark:divide-navy-700">
+                  {user.transactions.map((tx) => (
+                    <tr key={tx.id}>
+                      <td className="py-4 text-navy-900 dark:text-white font-medium flex items-center">
+                        {tx.type === "DEPOSIT" ? (
+                          <ArrowDownToLine className="w-4 h-4 mr-2 text-emerald-500 shrink-0" />
+                        ) : (
+                          <ArrowUpFromLine className="w-4 h-4 mr-2 text-red-400 shrink-0" />
+                        )}
+                        {tx.type === "DEPOSIT" ? "Deposit" : "Withdrawal"}
+                      </td>
+                      <td className="py-4 text-navy-600 dark:text-navy-400 font-medium">{tx.cryptoType}</td>
+                      <td className="py-4 text-navy-900 dark:text-white font-medium">
+                        ${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-4 text-navy-600 dark:text-navy-400">
+                        {new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </td>
+                      <td className="py-4">
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusColors[tx.status] || ""}`}>
+                          {tx.status.charAt(0) + tx.status.slice(1).toLowerCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="text-center py-12">
               <Wallet className="w-12 h-12 text-navy-300 dark:text-navy-600 mx-auto mb-4" />
