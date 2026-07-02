@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Wallet, ArrowDownToLine, ArrowUpFromLine, User, LogOut, Loader2 } from "lucide-react";
+import { LayoutDashboard, Wallet, ArrowDownToLine, ArrowUpFromLine, User, LogOut, Loader2, ShieldCheck, CreditCard } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import WeatherWidget from "@/components/WeatherWidget";
@@ -33,6 +33,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Deposit", href: "/dashboard/deposit", icon: <ArrowDownToLine className="w-5 h-5" /> },
     { name: "Withdraw", href: "/dashboard/withdraw", icon: <ArrowUpFromLine className="w-5 h-5" /> },
     { name: "My Wallet", href: "/dashboard/wallet", icon: <Wallet className="w-5 h-5" /> },
+    { name: "Verify Identity", href: "/dashboard/verify", icon: <ShieldCheck className="w-5 h-5" /> },
+    { name: "Crypto Card", href: "/dashboard/card", icon: <CreditCard className="w-5 h-5" /> },
     { name: "Profile", href: "/dashboard/profile", icon: <User className="w-5 h-5" /> },
   ];
 

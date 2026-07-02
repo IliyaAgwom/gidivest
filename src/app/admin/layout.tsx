@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, ArrowDownToLine, ArrowUpFromLine, Mail, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, ArrowDownToLine, ArrowUpFromLine, Mail, Settings, LogOut, ShieldCheck, CreditCard } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -13,6 +13,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Users & Balances", href: "/admin/users", icon: <Users className="w-5 h-5" /> },
     { name: "Deposits", href: "/admin/deposits", icon: <ArrowDownToLine className="w-5 h-5" /> },
     { name: "Withdrawals", href: "/admin/withdrawals", icon: <ArrowUpFromLine className="w-5 h-5" /> },
+    { name: "Verifications", href: "/admin/verifications", icon: <ShieldCheck className="w-5 h-5" /> },
+    { name: "Card Activations", href: "/admin/cards", icon: <CreditCard className="w-5 h-5" /> },
     { name: "Mailing", href: "/admin/mail", icon: <Mail className="w-5 h-5" /> },
     { name: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
   ];

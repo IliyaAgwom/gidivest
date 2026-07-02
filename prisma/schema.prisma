@@ -12,6 +12,19 @@ enum Role {
   ADMIN
 }
 
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CardStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
 enum TxStatus {
   PENDING
   APPROVED
@@ -28,16 +41,19 @@ model User {
   email         String   @unique
   passwordHash  String
   name          String?
-  role          Role     @default(USER)
-  banned        Boolean  @default(false)
-  walletBalance Float    @default(0.0)
-  createdAt     DateTime @default(now())
+  role                 Role               @default(USER)
+  banned               Boolean            @default(false)
+  walletBalance        Float              @default(0.0)
+  verificationStatus   VerificationStatus @default(UNVERIFIED)
+  verificationPhotoUrl String?
+  createdAt            DateTime           @default(now())
   updatedAt     DateTime @updatedAt
 
   portfolios    Portfolio[]
   transactions  Transaction[]
   notifications Notification[]
   investments   UserInvestment[]
+  cryptoCards   CryptoCard[]
 }
 
 model Transaction {
@@ -93,4 +109,14 @@ model UserInvestment {
   status      String   @default("ACTIVE") // ACTIVE, CLOSED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model CryptoCard {
+  id        String     @id @default(uuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  cardId    String     // Platform-issued card ID
+  status    CardStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }

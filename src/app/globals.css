@@ -39,3 +39,18 @@ body {
   background: rgba(16, 42, 67, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(130, 154, 177, 0.5);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(130, 154, 177, 0.8);
+}
