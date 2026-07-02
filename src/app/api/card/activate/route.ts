@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       select: {
         verificationStatus: true,
         name: true,
+        walletBalance: true,
         cryptoCards: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -40,6 +41,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       verificationStatus: user.verificationStatus,
       userName: user.name || 'Valued Member',
+      walletBalance: user.walletBalance,
       card: user.cryptoCards[0] || null,
     });
   } catch (error) {
