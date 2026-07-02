@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { TrendingUp, Wallet, ArrowDownToLine, ArrowUpFromLine, Activity, Loader2 } from "lucide-react";
 import Link from "next/link";
-import TrendingInvestments from "@/components/TrendingInvestments";
+import CryptoMarket from "@/components/CryptoMarket";
 
 type Transaction = {
   id: string;
@@ -185,8 +185,25 @@ export default function DashboardOverview() {
         </div>
       )}
 
-      {/* Trending Investments Section */}
-      <TrendingInvestments userBalance={user?.walletBalance ?? 0} />
+      {/* Crypto Market Widget */}
+      <CryptoMarket />
+
+      {/* Invest CTA */}
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_0_40px_rgba(16,185,129,0.15)]">
+        <div>
+          <h3 className="text-xl font-bold text-white">Ready to grow your wealth?</h3>
+          <p className="text-emerald-100 text-sm mt-1">
+            Browse our curated 20 investment assets — Stocks, Crypto &amp; ETFs — with live prices and instant execution.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/invest"
+          className="shrink-0 px-6 py-3 bg-white text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold transition-colors flex items-center gap-2 whitespace-nowrap"
+        >
+          <TrendingUp className="w-5 h-5" />
+          Browse Investments
+        </Link>
+      </div>
 
       {/* Recent Transactions */}
       <div className="bg-white dark:bg-navy-800 rounded-2xl border border-navy-200 dark:border-navy-700 shadow-sm overflow-hidden">
