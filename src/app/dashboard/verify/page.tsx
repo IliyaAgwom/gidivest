@@ -86,6 +86,7 @@ export default function VerifyPage() {
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Store data URL for preview only — actual upload uses canvas.toBlob()
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     setSnapshot(dataUrl);
     stopCamera();
@@ -100,29 +101,44 @@ export default function VerifyPage() {
 
   /* ── Submit snapshot ── */
   const handleSubmit = useCallback(async () => {
-    if (!snapshot) return;
+    if (!snapshot || !canvasRef.current) return;
     setUploading(true);
     setUploadError('');
 
     try {
-      // Convert base64 data-url → Blob
-      const res0  = await fetch(snapshot);
-      const blob  = await res0.blob();
-      const file  = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+      // Get blob directly from canvas (most reliable cross-browser method)
+      const blob: Blob = await new Promise((resolve, reject) => {
+        canvasRef.current!.toBlob(
+          (b) => { if (b) resolve(b); else reject(new Error('Canvas toBlob() returned null')); },
+          'image/jpeg',
+          0.92
+        );
+      });
 
-      // Upload to Cloudinary
+      const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+
+      // Upload to Cloudinary (preset must be set to "Unsigned" in Cloudinary dashboard)
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', 'hughvest');
+      formData.append('folder', 'verifications');
 
-      const cloudRes = await fetch('https://api.cloudinary.com/v1_1/dw2oepskw/image/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const cloudRes = await fetch(
+        'https://api.cloudinary.com/v1_1/dw2oepskw/image/upload',
+        { method: 'POST', body: formData }
+      );
 
-      if (!cloudRes.ok) throw new Error('Cloudinary upload failed');
+      // Parse response regardless of status to get error details
       const cloudData = await cloudRes.json();
-      const photoUrl  = cloudData.secure_url as string;
+
+      if (!cloudRes.ok) {
+        // Show the actual Cloudinary error message
+        const errMsg = cloudData?.error?.message || `Cloudinary error (${cloudRes.status})`;
+        throw new Error(`Upload failed: ${errMsg}`);
+      }
+
+      const photoUrl = cloudData.secure_url as string;
+      if (!photoUrl) throw new Error('No URL returned from Cloudinary');
 
       // Save to our API
       const apiRes = await fetch('/api/verify', {
@@ -136,6 +152,7 @@ export default function VerifyPage() {
         throw new Error(d.error || 'Submission failed');
       }
 
+      stopCamera();
       setDbStatus('PENDING');
       setDbPhotoUrl(photoUrl);
     } catch (err: any) {
@@ -143,7 +160,7 @@ export default function VerifyPage() {
     } finally {
       setUploading(false);
     }
-  }, [snapshot]);
+  }, [snapshot, stopCamera]);
 
   /* ─────────────────── RENDER ─────────────────── */
 
