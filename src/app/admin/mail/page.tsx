@@ -1,8 +1,43 @@
 "use client";
 
-import { Send } from "lucide-react";
+import { useState } from "react";
+import { Send, Loader2 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function AdminMail() {
+  const [audience, setAudience] = useState("all");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subject.trim() || !body.trim()) {
+      toast.error("Subject and body are required");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/mail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audience, subject, body }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send broadcast");
+      } else {
+        toast.success(data.message || "Emails sent successfully!");
+        setSubject("");
+        setBody("");
+      }
+    } catch (err: any) {
+      toast.error("An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="space-y-8 max-w-4xl">
       <div>
@@ -11,10 +46,14 @@ export default function AdminMail() {
       </div>
 
       <div className="bg-navy-800 rounded-2xl border border-navy-700 p-8">
-        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-6" onSubmit={handleSend}>
           <div>
             <label className="block text-sm font-medium text-navy-300 mb-1">Audience</label>
-            <select className="block w-full px-4 py-3 border border-navy-700 rounded-xl bg-navy-900 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+            <select 
+              value={audience}
+              onChange={(e) => setAudience(e.target.value)}
+              className="block w-full px-4 py-3 border border-navy-700 rounded-xl bg-navy-900 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            >
                <option value="all">All Active Investors</option>
                <option value="starter">Starter Plan Members</option>
                <option value="pro">Professional Plan Members</option>
@@ -26,6 +65,8 @@ export default function AdminMail() {
             <label className="block text-sm font-medium text-navy-300 mb-1">Subject Line</label>
             <input
               type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
               className="block w-full px-4 py-3 border border-navy-700 rounded-xl bg-navy-900 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
               placeholder="e.g. Weekly Market Update & Price Adjustments"
             />
@@ -35,15 +76,21 @@ export default function AdminMail() {
             <label className="block text-sm font-medium text-navy-300 mb-1">Email Body (Markdown supported)</label>
             <textarea
               rows={8}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
               className="block w-full px-4 py-3 border border-navy-700 rounded-xl bg-navy-900 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all resize-none"
-              placeholder="Write your email content here..."
+              placeholder="Write your email content here. HTML tags like <br/> and <strong> are supported."
             ></textarea>
           </div>
 
           <div className="flex justify-end pt-4">
-            <button className="flex items-center space-x-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-semibold transition-colors">
-              <Send className="w-5 h-5" />
-              <span>Send Campaign</span>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="flex items-center space-x-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-xl text-white font-semibold transition-colors"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              <span>{loading ? "Sending..." : "Send Campaign"}</span>
             </button>
           </div>
         </form>

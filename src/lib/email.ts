@@ -158,3 +158,13 @@ export function getNewChatMessageUserEmailHtml(name: string, message: string) {
     `
   );
 }
+
+export function getBroadcastEmailHtml(name: string, subject: string, body: string) {
+  return baseTemplate(
+    subject,
+    `
+    <p>Hi ${name},</p>
+    <div>${body}</div>
+    `
+  );
+}
