@@ -7,6 +7,54 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Password change state
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await fetch("/api/user/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPasswordSuccess(data.message || "Password updated successfully.");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setTimeout(() => setShowPasswordForm(false), 2000);
+      } else {
+        setPasswordError(data.error || "Failed to update password.");
+      }
+    } catch (err) {
+      setPasswordError("Something went wrong. Please try again.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetch("/api/user/me")
       .then((r) => r.json())
@@ -103,12 +151,86 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Security section placeholder */}
+      {/* Security section */}
       <div className="bg-white dark:bg-navy-800 rounded-2xl border border-navy-200 dark:border-navy-700 shadow-sm p-6">
         <h3 className="text-lg font-bold text-navy-900 dark:text-white mb-4">Security</h3>
-        <button className="w-full py-3 border-2 border-dashed border-navy-200 dark:border-navy-700 rounded-xl text-navy-500 dark:text-navy-400 hover:border-emerald-500 hover:text-emerald-600 transition-colors font-medium">
-          Change Password (coming soon)
-        </button>
+        
+        {!showPasswordForm ? (
+          <button 
+            onClick={() => setShowPasswordForm(true)}
+            className="w-full py-3 border border-navy-200 dark:border-navy-700 rounded-xl text-navy-600 dark:text-navy-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors font-medium bg-navy-50 dark:bg-navy-900/50"
+          >
+            Change Password
+          </button>
+        ) : (
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            {passwordError && (
+              <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm">
+                {passwordError}
+              </div>
+            )}
+            {passwordSuccess && (
+              <div className="p-3 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl text-sm flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" /> {passwordSuccess}
+              </div>
+            )}
+            
+            <div>
+              <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Current Password</label>
+              <input
+                type="password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-navy-200 dark:border-navy-700 bg-white dark:bg-navy-900 focus:ring-2 focus:ring-emerald-500 outline-none text-navy-900 dark:text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">New Password</label>
+              <input
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-navy-200 dark:border-navy-700 bg-white dark:bg-navy-900 focus:ring-2 focus:ring-emerald-500 outline-none text-navy-900 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-navy-200 dark:border-navy-700 bg-white dark:bg-navy-900 focus:ring-2 focus:ring-emerald-500 outline-none text-navy-900 dark:text-white"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPasswordForm(false);
+                  setPasswordError("");
+                  setPasswordSuccess("");
+                }}
+                className="flex-1 py-3 border border-navy-200 dark:border-navy-700 rounded-xl text-navy-600 dark:text-navy-300 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={passwordLoading}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors flex justify-center items-center gap-2"
+              >
+                {passwordLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Update Password
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
