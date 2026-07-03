@@ -19,7 +19,7 @@ const testimonials = [
     content: "I built Martcapp because I wanted a platform that treated every investor with the luxury and security of a private wealth manager. Watching our users achieve their dreams is the ultimate return on investment.",
     growth: "$500M+",
     timeframe: "Assets Managed",
-    imageUrl: "/hugh.jpg" // The user will place the picture here
+    image: "MT"
   },
   {
     name: "Elena Rodriguez",
@@ -50,7 +50,7 @@ export default function Testimonials() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {testimonials.map((t, idx) => {
-            const isCenter = idx === 1; // Highlight the middle testimonial (Hugh)
+            const isCenter = idx === 1; // Highlight the middle testimonial
 
             return (
               <motion.div
