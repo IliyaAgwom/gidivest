@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Send, Loader2 } from "lucide-react";
-import { toast } from "react-hot-toast";
 
 export default function AdminMail() {
   const [audience, setAudience] = useState("all");
@@ -13,7 +12,7 @@ export default function AdminMail() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject.trim() || !body.trim()) {
-      toast.error("Subject and body are required");
+      alert("Subject and body are required");
       return;
     }
 
@@ -26,14 +25,14 @@ export default function AdminMail() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Failed to send broadcast");
+        alert(data.error || "Failed to send broadcast");
       } else {
-        toast.success(data.message || "Emails sent successfully!");
+        alert(data.message || "Emails sent successfully!");
         setSubject("");
         setBody("");
       }
     } catch (err: any) {
-      toast.error("An error occurred");
+      alert("An error occurred");
     } finally {
       setLoading(false);
     }
