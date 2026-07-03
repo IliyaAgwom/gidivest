@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
+import { sendEmail, getApprovalEmailHtml, getRejectionEmailHtml } from '@/lib/email';
 
 async function getUserFromRequest(req: NextRequest) {
   const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'hugvest-secret-key-2024');
@@ -67,6 +68,11 @@ export async function POST(req: NextRequest) {
 
     const newStatus = action === 'approve' ? 'APPROVED' : 'REJECTED';
 
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     await prisma.user.update({
       where: { id: userId },
       data: {
@@ -87,6 +93,21 @@ export async function POST(req: NextRequest) {
         message,
       },
     });
+
+    // Send Email
+    if (action === 'approve') {
+      await sendEmail({
+        to: user.email,
+        subject: 'Identity Verification Approved',
+        html: getApprovalEmailHtml(user.name || 'Investor', 'Identity Verification', 'You can now access all features of your account.')
+      });
+    } else if (action === 'reject') {
+      await sendEmail({
+        to: user.email,
+        subject: 'Identity Verification Rejected',
+        html: getRejectionEmailHtml(user.name || 'Investor', 'Identity Verification', 'Please log in to your dashboard and re-submit a clear selfie for verification.')
+      });
+    }
 
     return NextResponse.json({ 
       success: true, 

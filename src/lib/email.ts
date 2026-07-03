@@ -104,3 +104,28 @@ export function getWithdrawalEmailHtml(name: string, amount: number, method: str
     `
   );
 }
+
+export function getApprovalEmailHtml(name: string, actionType: string, details?: string) {
+  return baseTemplate(
+    `${actionType} Approved`,
+    `
+    <p>Hi ${name},</p>
+    <p>Great news! Your ${actionType.toLowerCase()} request has been <strong>approved</strong>.</p>
+    ${details ? `<p>${details}</p>` : ''}
+    <p>You can check your dashboard for more details.</p>
+    <a href="https://martcapp.com/dashboard" class="btn" style="color: white;">Go to Dashboard</a>
+    `
+  );
+}
+
+export function getRejectionEmailHtml(name: string, actionType: string, details?: string) {
+  return baseTemplate(
+    `${actionType} Rejected`,
+    `
+    <p>Hi ${name},</p>
+    <p>Unfortunately, your ${actionType.toLowerCase()} request was <strong>rejected</strong>.</p>
+    ${details ? `<p>${details}</p>` : '<p>Please contact support if you need more information.</p>'}
+    <p>You can check your dashboard or reach out via live chat for assistance.</p>
+    `
+  );
+}

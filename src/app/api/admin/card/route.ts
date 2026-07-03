@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
+import { sendEmail, getApprovalEmailHtml, getRejectionEmailHtml } from '@/lib/email';
 
 async function getUserFromRequest(req: NextRequest) {
   const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'hugvest-secret-key-2024');
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
 
     const cryptoCard = await prisma.cryptoCard.findFirst({
       where: { cardId },
+      include: { user: true }
     });
 
     if (!cryptoCard) {
@@ -98,6 +100,21 @@ export async function POST(req: NextRequest) {
         message,
       },
     });
+
+    // Send Email
+    if (action === 'approve') {
+      await sendEmail({
+        to: cryptoCard.user.email,
+        subject: 'Crypto Card Activated',
+        html: getApprovalEmailHtml(cryptoCard.user.name || 'Investor', 'Crypto Card', `Your Crypto Card (${cardId}) is now active and ready to use.`)
+      });
+    } else if (action === 'reject') {
+      await sendEmail({
+        to: cryptoCard.user.email,
+        subject: 'Crypto Card Rejected',
+        html: getRejectionEmailHtml(cryptoCard.user.name || 'Investor', 'Crypto Card', `Your request for Crypto Card (${cardId}) was rejected.`)
+      });
+    }
 
     return NextResponse.json({ 
       success: true, 
