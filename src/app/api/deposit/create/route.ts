@@ -21,6 +21,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Crypto type is required" }, { status: 400 });
     }
 
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // Create a new PENDING transaction for the deposit
     const transaction = await prisma.transaction.create({
       data: {
@@ -35,9 +40,9 @@ export async function POST(req: NextRequest) {
 
     // Send deposit email asynchronously
     sendEmail({
-      to: session.email,
+      to: user.email,
       subject: "Deposit Request Received",
-      html: getDepositEmailHtml(session.name, amount, method),
+      html: getDepositEmailHtml(user.name, amount, cryptoType),
     });
 
     return NextResponse.json({ message: "Deposit request submitted successfully", transaction });

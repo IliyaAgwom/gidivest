@@ -45,17 +45,19 @@ export async function POST(req: NextRequest) {
       });
 
 
-      return transaction;
+      return { transaction, user };
     });
+
+    const { transaction, user } = result;
 
     // Send withdrawal email asynchronously
     sendEmail({
-      to: session.email,
+      to: user.email,
       subject: "Withdrawal Request Received",
-      html: getWithdrawalEmailHtml(session.name, amount, method, address),
+      html: getWithdrawalEmailHtml(user.name, amount, cryptoType, walletAddress),
     });
 
-    return NextResponse.json({ message: "Withdrawal submitted successfully", transaction: result });
+    return NextResponse.json({ message: "Withdrawal submitted successfully", transaction });
   } catch (error: any) {
     console.error("Withdrawal error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
