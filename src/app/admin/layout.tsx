@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 flex justify-between items-center">
           <Link href="/" className="flex items-center space-x-2">
              <div className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded uppercase tracking-widest">Admin</div>
-             <span className="text-xl font-bold tracking-tight">HughVest</span>
+             <span className="text-xl font-bold tracking-tight">Martcapp</span>
           </Link>
           <button className="md:hidden text-navy-400" onClick={() => setIsMobileMenuOpen(false)}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>

@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HughVest - Invest Smarter. Grow Stronger.",
+  title: "Martcapp - Invest Smarter. Grow Stronger.",
   description: "Access diversified investment opportunities, real-time market insights, and intelligent portfolio management—all in one secure platform.",
 };
 

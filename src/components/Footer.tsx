@@ -18,10 +18,10 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-6">
               <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-                <span className="text-white font-bold text-xl leading-none">H</span>
+                <span className="text-white font-bold text-xl leading-none">M</span>
               </div>
               <span className="text-2xl font-bold tracking-tight">
-                HughVest
+                Martcapp
               </span>
             </Link>
             <p className="text-navy-300 leading-relaxed max-w-sm mb-6">
@@ -79,7 +79,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-navy-800 pt-8 flex flex-col md:flex-row justify-between items-center text-navy-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} HughVest Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Martcapp Inc. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <span>SEC Compliant</span>
             <span>Bank-Level Security</span>

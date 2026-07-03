@@ -157,7 +157,7 @@ export default function CardPage() {
           <div className="mx-auto max-w-sm aspect-[1.586/1] w-full rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 p-6 shadow-2xl relative overflow-hidden opacity-60 saturate-50 select-none">
             <div className="flex justify-between items-start mb-8">
               <div className="space-y-1 text-left">
-                <p className="text-[10px] text-gray-500 tracking-wider">HUGHVEST</p>
+                <p className="text-[10px] text-gray-500 tracking-wider">MARTCAPP</p>
                 <div className="w-8 h-6 bg-gray-700/50 rounded-md" />
               </div>
               <p className="text-xs font-semibold text-gray-500 tracking-widest">PREMIUM CRYPTO</p>
@@ -346,7 +346,7 @@ export default function CardPage() {
 
             <div className="flex justify-between items-start mb-6">
               <div className="space-y-1.5 text-left">
-                <p className="text-[11px] font-bold text-emerald-400 tracking-widest font-mono">HUGHVEST</p>
+                <p className="text-[11px] font-bold text-emerald-400 tracking-widest font-mono">MARTCAPP</p>
                 <svg className="w-9 h-7 text-amber-500/80 fill-current" viewBox="0 0 100 100">
                   <rect x="10" y="20" width="80" height="60" rx="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <line x1="10" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="4" />

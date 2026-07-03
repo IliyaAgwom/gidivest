@@ -45,7 +45,7 @@ export default function SmartFeatures() {
               Smart Features for <br/> <span className="text-emerald-600 dark:text-emerald-400">Intelligent Investors</span>
             </h2>
             <p className="text-lg text-navy-600 dark:text-navy-300 mb-8 leading-relaxed">
-              HughVest combines advanced technology with financial expertise to give you a competitive edge. Our platform provides the tools you need to make informed decisions and grow your wealth automatically.
+              Martcapp combines advanced technology with financial expertise to give you a competitive edge. Our platform provides the tools you need to make informed decisions and grow your wealth automatically.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -77,7 +77,7 @@ export default function SmartFeatures() {
                   <Bot className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-navy-900 dark:text-white text-lg">HughVest AI</h3>
+                  <h3 className="font-bold text-navy-900 dark:text-white text-lg">Martcapp AI</h3>
                   <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Online • Analyzing Markets</p>
                 </div>
               </div>

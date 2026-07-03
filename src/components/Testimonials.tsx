@@ -8,15 +8,15 @@ const testimonials = [
   {
     name: "Sarah Jenkins",
     role: "Tech Executive",
-    content: "HughVest completely transformed how I manage my wealth. The AI recommendations have consistently outperformed my previous advisor, and the interface is incredibly intuitive.",
+    content: "Martcapp completely transformed how I manage my wealth. The AI recommendations have consistently outperformed my previous advisor, and the interface is incredibly intuitive.",
     growth: "+24.5%",
     timeframe: "in 12 months",
     image: "SJ"
   },
   {
-    name: "Hugh Jackman",
+    name: "Marcus T.",
     role: "CEO & Founder",
-    content: "I built HughVest because I wanted a platform that treated every investor with the luxury and security of a private wealth manager. Watching our users achieve their dreams is the ultimate return on investment.",
+    content: "I built Martcapp because I wanted a platform that treated every investor with the luxury and security of a private wealth manager. Watching our users achieve their dreams is the ultimate return on investment.",
     growth: "$500M+",
     timeframe: "Assets Managed",
     imageUrl: "/hugh.jpg" // The user will place the picture here
@@ -24,7 +24,7 @@ const testimonials = [
   {
     name: "Elena Rodriguez",
     role: "Freelance Designer",
-    content: "As someone new to investing, HughVest's education hub and automated portfolio rebalancing gave me the confidence to start building my financial future securely.",
+    content: "As someone new to investing, Martcapp's education hub and automated portfolio rebalancing gave me the confidence to start building my financial future securely.",
     growth: "+15.8%",
     timeframe: "in 9 months",
     image: "ER"
@@ -44,7 +44,7 @@ export default function Testimonials() {
             Trusted by the <span className="text-emerald-600 dark:text-emerald-400">Best</span>
           </h2>
           <p className="text-xl text-navy-600 dark:text-navy-300">
-            Join thousands of individuals who are accelerating their wealth generation with HughVest's intelligent platform.
+            Join thousands of individuals who are accelerating their wealth generation with Martcapp's intelligent platform.
           </p>
         </div>
 
@@ -84,7 +84,7 @@ export default function Testimonials() {
                     {t.imageUrl ? (
                       <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-emerald-500 relative bg-navy-800">
                          {/* Fallback image style in case actual image is missing */}
-                         <div className="absolute inset-0 flex items-center justify-center text-xs text-white">Hugh</div>
+                         <div className="absolute inset-0 flex items-center justify-center text-xs text-white">CEO</div>
                          {/* We use an img tag instead of next/image just to prevent build errors if the user forgets to add the file, but next/image is better. We'll use a standard img tag for safety here */}
                          <img src={t.imageUrl} alt={t.name} className="w-full h-full object-cover relative z-10" />
                       </div>

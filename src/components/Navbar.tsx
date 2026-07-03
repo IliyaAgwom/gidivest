@@ -47,10 +47,10 @@ export default function Navbar() {
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-                <span className="text-white font-bold text-xl leading-none">H</span>
+                <span className="text-white font-bold text-xl leading-none">M</span>
               </div>
               <span className="text-2xl font-bold text-navy-900 dark:text-white tracking-tight">
-                HughVest
+                Martcapp
               </span>
             </Link>
           </div>

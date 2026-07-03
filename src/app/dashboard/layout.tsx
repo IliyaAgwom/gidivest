@@ -60,9 +60,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="p-6 flex justify-between items-center">
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-              <span className="text-white font-bold text-xl leading-none">H</span>
+              <span className="text-white font-bold text-xl leading-none">M</span>
             </div>
-            <span className="text-xl font-bold text-navy-900 dark:text-white tracking-tight">HughVest</span>
+            <span className="text-xl font-bold text-navy-900 dark:text-white tracking-tight">Martcapp</span>
           </Link>
           <button className="md:hidden text-navy-500" onClick={() => setIsMobileMenuOpen(false)}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
