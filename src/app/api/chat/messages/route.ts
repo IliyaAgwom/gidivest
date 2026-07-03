@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import { sendEmail, getNewChatMessageAdminEmailHtml } from "@/lib/email";
 
 const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "hugvest-secret-key-2024");
 
@@ -40,6 +41,15 @@ export async function POST(req: NextRequest) {
   const chat = await prisma.chatMessage.create({
     data: { userId: session.id, message: message.trim(), sender: "USER" },
   });
+
+  // Notify admin (using a default admin email or support email)
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "support@martcapp.com";
+  // We do not block the response on email sending to make chat feel snappy
+  sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `New Message from ${session.name || session.email}`,
+    html: getNewChatMessageAdminEmailHtml(session.name || "User", session.email, chat.message)
+  }).catch(console.error);
 
   return NextResponse.json(chat);
 }

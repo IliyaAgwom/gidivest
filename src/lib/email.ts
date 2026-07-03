@@ -129,3 +129,32 @@ export function getRejectionEmailHtml(name: string, actionType: string, details?
     `
   );
 }
+
+export function getNewChatMessageAdminEmailHtml(userName: string, userEmail: string, message: string) {
+  return baseTemplate(
+    "New Support Message",
+    `
+    <p>A new support message was received from <strong>${userName}</strong> (${userEmail}):</p>
+    <div style="background-color: #f1f5f9; padding: 15px; border-left: 4px solid #10b981; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0;">${message}</p>
+    </div>
+    <p>Log in to the admin panel to reply.</p>
+    <a href="https://martcapp.com/admin/chat" class="btn" style="color: white;">Reply to Message</a>
+    `
+  );
+}
+
+export function getNewChatMessageUserEmailHtml(name: string, message: string) {
+  return baseTemplate(
+    "New Message from Support",
+    `
+    <p>Hi ${name},</p>
+    <p>You have a new message from Martcapp Support:</p>
+    <div style="background-color: #f1f5f9; padding: 15px; border-left: 4px solid #10b981; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0;">${message}</p>
+    </div>
+    <p>You can view the full conversation or reply directly from your dashboard.</p>
+    <a href="https://martcapp.com/dashboard" class="btn" style="color: white;">View in Dashboard</a>
+    `
+  );
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import { sendEmail, getNewChatMessageUserEmailHtml } from "@/lib/email";
 
 const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "hugvest-secret-key-2024");
 
@@ -83,6 +84,16 @@ export async function POST(req: NextRequest) {
   const chat = await prisma.chatMessage.create({
     data: { userId, message: message.trim(), sender: "ADMIN" },
   });
+
+  // Notify user via email
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (user) {
+    sendEmail({
+      to: user.email,
+      subject: "New Message from Support",
+      html: getNewChatMessageUserEmailHtml(user.name || "Investor", chat.message)
+    }).catch(console.error);
+  }
 
   return NextResponse.json(chat);
 }
