@@ -48,8 +48,7 @@ export default function WithdrawPage() {
   }, []);
 
   const parsedAmount = parseFloat(amount) || 0;
-  const expressFee   = parsedAmount * 0.4;
-  const totalRequired = withdrawalType === "EXPRESS" ? parsedAmount + expressFee : parsedAmount;
+  const totalRequired = parsedAmount;
 
   /* ── Step 1: validate form → open unlock modal ── */
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -208,12 +207,6 @@ export default function WithdrawPage() {
                       ${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  {withdrawalType === "EXPRESS" && (
-                    <div className="flex justify-between text-amber-400">
-                      <span>Express Fee (40%)</span>
-                      <span>${expressFee.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between text-gray-400">
                     <span>Destination</span>
                     <span className="font-mono text-gray-300 text-xs truncate max-w-[160px]">{walletAddress}</span>
@@ -353,7 +346,7 @@ export default function WithdrawPage() {
                   <span className="font-bold text-navy-900 dark:text-white flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" /> Express</span>
                   <span className="text-xs font-semibold px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 rounded-md">24 Hours</span>
                 </div>
-                <p className="text-xs text-navy-500 dark:text-navy-400">Priority processing. Requires 40% security deposit fee.</p>
+                <p className="text-xs text-navy-500 dark:text-navy-400">Priority processing.</p>
               </label>
             </div>
           </div>
@@ -374,29 +367,13 @@ export default function WithdrawPage() {
               />
               <button
                 type="button"
-                onClick={() => setAmount(withdrawalType === "EXPRESS" ? (userBalance / 1.4).toFixed(2) : userBalance.toString())}
+                onClick={() => setAmount(userBalance.toString())}
                 className="absolute inset-y-0 right-4 text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase"
               >
                 Max
               </button>
             </div>
 
-            {withdrawalType === "EXPRESS" && parsedAmount > 0 && (
-              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm">
-                <div className="flex justify-between text-navy-600 dark:text-navy-300 mb-1">
-                  <span>Withdrawal Amount:</span>
-                  <span>${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between text-amber-700 dark:text-amber-400 mb-1 font-medium">
-                  <span>Express Fee (40%):</span>
-                  <span>${expressFee.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between font-bold text-navy-900 dark:text-white pt-2 border-t border-amber-200 dark:border-amber-800">
-                  <span>Total Deducted:</span>
-                  <span>${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Crypto type */}

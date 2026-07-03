@@ -43,19 +43,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // If express, create an additional transaction for the fee record
-      if (withdrawalType === "EXPRESS") {
-        const fee = totalRequired - amount;
-        await tx.transaction.create({
-          data: {
-            userId,
-            type: "WITHDRAWAL",
-            amount: fee,
-            cryptoType: "Express Processing Fee",
-            status: "APPROVED",
-          },
-        });
-      }
 
       return transaction;
     });
