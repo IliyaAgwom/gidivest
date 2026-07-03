@@ -11,6 +11,7 @@ type User = {
   role: string;
   banned: boolean;
   walletBalance: number;
+  lastActive: string;
   createdAt: string;
 };
 
@@ -82,6 +83,7 @@ export default function AdminUsersPage() {
                 <th className="p-4 font-medium">Name</th>
                 <th className="p-4 font-medium">Email</th>
                 <th className="p-4 font-medium">Balance</th>
+                <th className="p-4 font-medium">Online</th>
                 <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium text-right">Actions</th>
               </tr>
@@ -92,6 +94,17 @@ export default function AdminUsersPage() {
                   <td className="p-4 text-white font-medium">{user.name || "N/A"}</td>
                   <td className="p-4 text-navy-300">{user.email}</td>
                   <td className="p-4 text-emerald-400 font-bold">${user.walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                  <td className="p-4">
+                    {new Date(user.lastActive).getTime() > Date.now() - 5 * 60 * 1000 ? (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-navy-400">
+                        <span className="w-2 h-2 rounded-full bg-navy-500"></span> Offline
+                      </span>
+                    )}
+                  </td>
                   <td className="p-4">
                     {user.banned ? (
                       <span className="px-2.5 py-1 bg-red-900/40 text-red-400 rounded-full text-xs font-semibold border border-red-800/50">Banned</span>

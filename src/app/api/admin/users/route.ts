@@ -12,6 +12,7 @@ export async function GET() {
         role: true,
         banned: true,
         walletBalance: true,
+        lastActive: true,
         createdAt: true,
       }
     });
