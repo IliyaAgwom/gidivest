@@ -13,6 +13,7 @@ export async function GET() {
         banned: true,
         walletBalance: true,
         lastActive: true,
+        country: true,
         createdAt: true,
       }
     });

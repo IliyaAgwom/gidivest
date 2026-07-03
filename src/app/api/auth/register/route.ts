@@ -5,7 +5,7 @@ import { sendEmail, getWelcomeEmailHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, country } = await req.json();
 
     // Validate input
     if (!name || !email || !password) {
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         name,
         email,
         passwordHash,
+        country: country || "Unknown",
         portfolios: {
           create: {
             totalValue: 0,

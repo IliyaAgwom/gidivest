@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User, Mail, Shield, Calendar, Loader2, CheckCircle } from "lucide-react";
+import { User, Mail, Shield, Calendar, Loader2, CheckCircle, Globe } from "lucide-react";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -136,6 +136,16 @@ export default function ProfilePage() {
             <div>
               <p className="text-xs font-medium text-navy-500 dark:text-navy-400 uppercase tracking-wide">Account Role</p>
               <p className="text-navy-900 dark:text-white font-semibold mt-0.5">{user?.role === "ADMIN" ? "Administrator" : "Investor"}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 p-6">
+            <div className="w-10 h-10 rounded-xl bg-navy-50 dark:bg-navy-900 flex items-center justify-center">
+              <Globe className="w-5 h-5 text-navy-500 dark:text-navy-400" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-navy-500 dark:text-navy-400 uppercase tracking-wide">Country</p>
+              <p className="text-navy-900 dark:text-white font-semibold mt-0.5">{user?.country || "Unknown"}</p>
             </div>
           </div>
 

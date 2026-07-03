@@ -12,6 +12,7 @@ type User = {
   banned: boolean;
   walletBalance: number;
   lastActive: string;
+  country: string;
   createdAt: string;
 };
 
@@ -95,15 +96,18 @@ export default function AdminUsersPage() {
                   <td className="p-4 text-navy-300">{user.email}</td>
                   <td className="p-4 text-emerald-400 font-bold">${user.walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
                   <td className="p-4">
-                    {new Date(user.lastActive).getTime() > Date.now() - 5 * 60 * 1000 ? (
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-navy-400">
-                        <span className="w-2 h-2 rounded-full bg-navy-500"></span> Offline
-                      </span>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {new Date(user.lastActive).getTime() > Date.now() - 5 * 60 * 1000 ? (
+                        <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-xs font-semibold text-navy-400">
+                          <span className="w-2 h-2 rounded-full bg-navy-500"></span> Offline
+                        </span>
+                      )}
+                      <span className="text-xs text-navy-500">{user.country || "Unknown"}</span>
+                    </div>
                   </td>
                   <td className="p-4">
                     {user.banned ? (

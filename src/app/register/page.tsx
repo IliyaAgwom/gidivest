@@ -3,11 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Mail, Lock, User, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, CheckCircle, AlertCircle, Loader2, Globe } from "lucide-react";
+
+const COUNTRIES = [
+  "United States", "United Kingdom", "Canada", "Australia", "Germany", 
+  "France", "Japan", "South Korea", "Brazil", "India", "Nigeria", 
+  "South Africa", "Mexico", "Spain", "Italy", "Netherlands", "Sweden"
+];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "", country: "United States" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -39,7 +45,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
+        body: JSON.stringify({ name: form.name, email: form.email, password: form.password, country: form.country }),
       });
 
       const data = await res.json();
@@ -128,6 +134,27 @@ export default function RegisterPage() {
                   placeholder="you@example.com"
                   required
                 />
+              </div>
+            </div>
+
+            {/* Country */}
+            <div>
+              <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Country</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Globe className="h-5 w-5 text-navy-400" />
+                </div>
+                <select
+                  name="country"
+                  value={form.country}
+                  onChange={(e: any) => handleChange(e)}
+                  className="block w-full pl-10 pr-3 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none"
+                  required
+                >
+                  {COUNTRIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
