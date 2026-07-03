@@ -386,8 +386,13 @@ export default function WithdrawPage() {
             >
               <option value="BTC">Bitcoin (BTC)</option>
               <option value="ETH">Ethereum (ETH)</option>
-              <option value="USDT">Tether (USDT - ERC20)</option>
+              <option value="USDT">Tether (USDT - TRC20)</option>
             </select>
+            {cryptoType === "USDT" && (
+              <p className="text-xs text-amber-500 font-bold mt-2">
+                ⚠️ Please ensure your receiving address is a TRC20 network address.
+              </p>
+            )}
           </div>
 
           {/* Wallet address */}

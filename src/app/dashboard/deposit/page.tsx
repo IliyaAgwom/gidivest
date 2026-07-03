@@ -92,6 +92,11 @@ export default function DepositPage() {
               <option value="ETH">Ethereum (ETH)</option>
               <option value="USDT">Tether (USDT)</option>
             </select>
+            {cryptoType === "USDT" && (
+              <p className="text-xs text-amber-500 font-bold mt-2 text-center">
+                ⚠️ Please send USDT via the TRC20 network ONLY.
+              </p>
+            )}
           </div>
 
           <div className="w-48 h-48 bg-white p-2 rounded-lg mb-4">
