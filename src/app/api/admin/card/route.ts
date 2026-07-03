@@ -62,14 +62,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Card ID and action are required' }, { status: 400 });
     }
 
-    if (action !== 'approve' && action !== 'reject') {
+    if (action !== 'approve' && action !== 'reject' && action !== 'restrict') {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
-    const newStatus = action === 'approve' ? 'ACTIVE' : 'INACTIVE';
+    const newStatus = action === 'approve' ? 'ACTIVE' : action === 'restrict' ? 'RESTRICTED' : 'INACTIVE';
 
     const cryptoCard = await prisma.cryptoCard.findFirst({
-      where: { cardId, status: 'PENDING' },
+      where: { cardId },
     });
 
     if (!cryptoCard) {
@@ -84,9 +84,11 @@ export async function POST(req: NextRequest) {
     });
 
     // Create a notification for the user
-    const title = action === 'approve' ? 'Card Activated' : 'Card Activation Rejected';
+    const title = action === 'approve' ? 'Card Activated' : action === 'restrict' ? 'Card Restricted' : 'Card Activation Rejected';
     const message = action === 'approve'
       ? `Your Crypto Card (${cardId}) has been successfully activated!`
+      : action === 'restrict'
+      ? `Your Crypto Card (${cardId}) has been restricted. Please contact support.`
       : `Your request to activate card ${cardId} was rejected.`;
 
     await prisma.notification.create({

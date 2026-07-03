@@ -1,22 +1,7 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-// Configuration defaults
-const SMTP_HOST = process.env.SMTP_HOST || '';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-const FROM_EMAIL = `Martcapp <${SMTP_USER}>`;
-
-// Create the transporter
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // true for 465, false for other ports
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = 'Martcapp <noreply@martcapp.com>';
 
 interface EmailOptions {
   to: string;
@@ -25,27 +10,21 @@ interface EmailOptions {
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
-  // If SMTP is not configured, just log to console and return
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.log(`[Email Skipped] SMTP not configured. Would have sent:`);
-    console.log(`To: ${to}\nSubject: ${subject}\n\n`);
-    return { success: false, error: 'SMTP not configured' };
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[Email Skipped] RESEND_API_KEY not set. Would send to: ${to}`);
+    return { success: false, error: 'RESEND_API_KEY not configured' };
   }
-
   try {
-    const info = await transporter.sendMail({
-      from: FROM_EMAIL,
-      to,
-      subject,
-      html,
-    });
-    console.log(`Email sent: ${info.messageId}`);
-    return { success: true, messageId: info.messageId };
+    const { data, error } = await resend.emails.send({ from: FROM_EMAIL, to, subject, html });
+    if (error) { console.error('Resend error:', error); return { success: false, error }; }
+    console.log(`Email sent: ${data?.id}`);
+    return { success: true, id: data?.id };
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error('Error sending email:', error);
     return { success: false, error };
   }
 }
+
 
 // ------------------------------------------------------------------
 // TEMPLATES

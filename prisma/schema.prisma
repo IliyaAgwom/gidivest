@@ -23,6 +23,7 @@ enum CardStatus {
   PENDING
   ACTIVE
   INACTIVE
+  RESTRICTED
 }
 
 enum TxStatus {
@@ -56,6 +57,7 @@ model User {
   notifications Notification[]
   investments   UserInvestment[]
   cryptoCards   CryptoCard[]
+  chatMessages  ChatMessage[]
 }
 
 model Transaction {
@@ -114,11 +116,22 @@ model UserInvestment {
 }
 
 model CryptoCard {
-  id        String     @id @default(uuid())
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  cardId      String     // Platform-issued card ID
+  status      CardStatus @default(PENDING)
+  cardBalance Float      @default(0.0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
   userId    String
-  user      User       @relation(fields: [userId], references: [id])
-  cardId    String     // Platform-issued card ID
-  status    CardStatus @default(PENDING)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  sender    String   // "USER" or "ADMIN"
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

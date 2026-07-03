@@ -15,7 +15,8 @@ const UNLOCK_AMOUNT = 6000;
 interface CardDetails {
   id: string;
   cardId: string;
-  status: 'PENDING' | 'ACTIVE' | 'INACTIVE';
+  status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'RESTRICTED';
+  cardBalance: number;
   createdAt: string;
 }
 
@@ -143,7 +144,50 @@ export default function CardPage() {
     );
   }
 
-  /* ────── Case 2: Card PENDING ────── */
+  /* ────── Case 2: Card RESTRICTED ────── */
+  if (card && card.status === 'RESTRICTED') {
+    return (
+      <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Crypto Card</h1>
+          <p className="text-gray-400">Your card status.</p>
+        </div>
+        <div className="glass-card rounded-2xl p-8 text-center space-y-6 relative overflow-hidden border border-red-500/20">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+          {/* Restricted mock card */}
+          <div className="mx-auto max-w-sm aspect-[1.586/1] w-full rounded-2xl bg-gradient-to-br from-red-950 via-gray-900 to-black border border-red-500/30 p-6 shadow-2xl relative overflow-hidden select-none">
+            <div className="flex justify-between items-start mb-6">
+              <div className="space-y-1 text-left">
+                <p className="text-[10px] text-red-400 tracking-widest font-mono font-bold">MARTCAPP</p>
+              </div>
+              <p className="text-[10px] font-extrabold text-white tracking-widest bg-red-500/20 px-2.5 py-1 rounded-full border border-red-500/20 uppercase">Restricted</p>
+            </div>
+            <div className="text-left mb-6 font-mono text-xl tracking-widest text-gray-400">•••• •••• •••• {card.cardId.slice(-4)}</div>
+            <div className="flex justify-between items-end">
+              <div className="text-left">
+                <p className="text-[8px] text-gray-600">CARD HOLDER</p>
+                <p className="text-sm font-semibold tracking-wide text-gray-400">{userName.toUpperCase()}</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-white">Card Restricted</h2>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Your Crypto Card has been temporarily restricted by our compliance team. Please contact support via the chat widget below for assistance.
+            </p>
+          </div>
+          <div className="pt-2 flex justify-center">
+            <span className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span>Status: Restricted — Contact Support</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ────── Case 3: Card PENDING ────── */
   if (card && card.status === 'PENDING') {
     return (
       <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
@@ -354,7 +398,11 @@ export default function CardPage() {
                   <line x1="70" y1="20" x2="70" y2="80" stroke="currentColor" strokeWidth="4" />
                 </svg>
               </div>
-              <p className="text-[10px] font-extrabold text-white tracking-widest bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase">Active</p>
+              <div className="text-right">
+                <p className="text-[10px] font-extrabold text-white tracking-widest bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase">Active</p>
+                <p className="text-[10px] text-gray-500 mt-1">Balance</p>
+                <p className="text-sm font-bold text-emerald-400">${(card.cardBalance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              </div>
             </div>
 
             <div className="text-left mb-6 font-mono text-xl tracking-widest text-white font-semibold select-all">{cardNum}</div>

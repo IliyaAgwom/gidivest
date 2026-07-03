@@ -5,6 +5,7 @@ import { LayoutDashboard, Wallet, ArrowDownToLine, ArrowUpFromLine, User, LogOut
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import WeatherWidget from "@/components/WeatherWidget";
+import ChatWidget from "@/components/ChatWidget";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -44,7 +45,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     : "HV";
 
   return (
-    <div className="flex h-screen bg-navy-50 dark:bg-navy-900 relative">
+    <>
+      <div className="flex h-screen bg-navy-50 dark:bg-navy-900 relative">
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -143,5 +145,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </main>
     </div>
+    <ChatWidget />
+    </>
   );
 }

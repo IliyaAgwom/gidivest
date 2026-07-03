@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, X, Search, CreditCard, Loader2 } from 'lucide-react';
+import { Check, X, Search, CreditCard, Loader2, ShieldOff } from 'lucide-react';
 
 interface CardActivationRequest {
   id: string;
@@ -56,6 +56,21 @@ export default function AdminCardsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cardId: cId, action: 'reject' }),
+      });
+      if (res.ok) {
+        setCards(prev => prev.filter(c => c.id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRestrict = async (id: string, cId: string) => {
+    try {
+      const res = await fetch('/api/admin/card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: cId, action: 'restrict' }),
       });
       if (res.ok) {
         setCards(prev => prev.filter(c => c.id !== id));
@@ -136,6 +151,13 @@ export default function AdminCardsPage() {
                           title="Reject"
                         >
                           <X className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleRestrict(c.id, c.cardId)}
+                          className="p-2 rounded-lg text-gray-400 hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
+                          title="Restrict"
+                        >
+                          <ShieldOff className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleApprove(c.id, c.cardId)}
