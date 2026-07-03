@@ -152,7 +152,7 @@ export default function CryptoMarket() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
+          <table className="w-full text-sm min-w-full">
             <thead>
               <tr className="text-xs text-navy-500 dark:text-navy-400 border-b border-navy-100 dark:border-navy-700 bg-navy-50/50 dark:bg-navy-900/30">
                 <th className="py-3 px-4 font-semibold text-left">#</th>

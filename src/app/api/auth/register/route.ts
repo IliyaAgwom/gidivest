@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendEmail, getWelcomeEmailHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,6 +47,13 @@ export async function POST(req: NextRequest) {
           },
         },
       },
+    });
+
+    // Send welcome email asynchronously
+    sendEmail({
+      to: email,
+      subject: "Welcome to Martcapp!",
+      html: getWelcomeEmailHtml(name),
     });
 
     return NextResponse.json(

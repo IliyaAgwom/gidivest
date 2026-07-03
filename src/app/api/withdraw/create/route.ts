@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import { sendEmail, getWithdrawalEmailHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,6 +46,13 @@ export async function POST(req: NextRequest) {
 
 
       return transaction;
+    });
+
+    // Send withdrawal email asynchronously
+    sendEmail({
+      to: session.email,
+      subject: "Withdrawal Request Received",
+      html: getWithdrawalEmailHtml(session.name, amount, method, address),
     });
 
     return NextResponse.json({ message: "Withdrawal submitted successfully", transaction: result });

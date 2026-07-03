@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import { sendEmail, getDepositEmailHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,6 +31,13 @@ export async function POST(req: NextRequest) {
         txHash: txHash || null,
         status: "PENDING"
       }
+    });
+
+    // Send deposit email asynchronously
+    sendEmail({
+      to: session.email,
+      subject: "Deposit Request Received",
+      html: getDepositEmailHtml(session.name, amount, method),
     });
 
     return NextResponse.json({ message: "Deposit request submitted successfully", transaction });
