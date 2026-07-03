@@ -32,13 +32,7 @@ export default function TrustIndicators() {
         <div className="flex flex-col xl:flex-row items-center justify-between gap-8">
           
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="flex items-center space-x-4 bg-white dark:bg-navy-800 p-4 pr-8 rounded-2xl shadow-sm border border-navy-200 dark:border-navy-700 hover:shadow-md transition-shadow">
-              <img src="/ceo.jpg" alt="Hugh Jackman, CEO" className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-emerald-500 shadow-sm" />
-              <div className="flex flex-col">
-                <span className="text-xl md:text-2xl font-bold text-navy-900 dark:text-white leading-tight">Hugh Jackman</span>
-                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-1">Chief Executive Officer</span>
-              </div>
-            </div>
+
 
             <div className="flex items-center space-x-6">
             <div className="flex flex-col">
