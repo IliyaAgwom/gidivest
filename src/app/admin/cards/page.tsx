@@ -46,9 +46,13 @@ export default function AdminCardsPage() {
       if (res.ok) {
         const data = await res.json();
         setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to approve card');
       }
     } catch (err) {
       console.error(err);
+      alert('An unexpected error occurred while approving.');
     }
   };
 
@@ -62,9 +66,13 @@ export default function AdminCardsPage() {
       if (res.ok) {
         const data = await res.json();
         setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to reject card');
       }
     } catch (err) {
       console.error(err);
+      alert('An unexpected error occurred while rejecting.');
     }
   };
 
@@ -78,9 +86,13 @@ export default function AdminCardsPage() {
       if (res.ok) {
         const data = await res.json();
         setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to restrict card');
       }
     } catch (err) {
       console.error(err);
+      alert('An unexpected error occurred while restricting.');
     }
   };
 
@@ -94,9 +106,13 @@ export default function AdminCardsPage() {
       if (res.ok) {
         const data = await res.json();
         setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to unrestrict card');
       }
     } catch (err) {
       console.error(err);
+      alert('An unexpected error occurred while unrestricting.');
     }
   };
 
