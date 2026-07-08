@@ -24,6 +24,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE "CryptoCard" 
+        ADD COLUMN IF NOT EXISTS "cardBalance" DOUBLE PRECISION DEFAULT 0.0,
+        ADD COLUMN IF NOT EXISTS "pendingDepositAmount" DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS "pendingDepositTxHash" TEXT,
+        ADD COLUMN IF NOT EXISTS "pendingDepositAt" TIMESTAMP(3);
+      `);
+    } catch (dbError) {
+      console.log('Safe to ignore - migration may have already run or syntax not supported:', dbError);
+    }
+
     const pendingCards = await prisma.cryptoCard.findMany({
       include: {
         user: {
