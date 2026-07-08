@@ -14,7 +14,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Deposits", href: "/admin/deposits", icon: <ArrowDownToLine className="w-5 h-5" /> },
     { name: "Withdrawals", href: "/admin/withdrawals", icon: <ArrowUpFromLine className="w-5 h-5" /> },
     { name: "Verifications", href: "/admin/verifications", icon: <ShieldCheck className="w-5 h-5" /> },
-    { name: "Card Activations", href: "/admin/cards", icon: <CreditCard className="w-5 h-5" /> },
+    { name: "Manage Cards", href: "/admin/cards", icon: <CreditCard className="w-5 h-5" /> },
     { name: "Support Chat", href: "/admin/chat", icon: <MessageCircle className="w-5 h-5" /> },
     { name: "Mailing", href: "/admin/mail", icon: <Mail className="w-5 h-5" /> },
     { name: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
