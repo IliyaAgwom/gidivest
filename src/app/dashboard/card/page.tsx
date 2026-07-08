@@ -545,7 +545,7 @@ export default function CardPage() {
                 </div>
                 <div className="flex justify-between py-1.5">
                   <span className="text-gray-400">Daily ATM Limit</span>
-                  <span className="text-gray-200">$5,000.00</span>
+                  <span className="text-gray-200">$25,000.00</span>
                 </div>
               </div>
             </div>
