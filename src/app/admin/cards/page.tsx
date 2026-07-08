@@ -16,6 +16,7 @@ export default function AdminCardsPage() {
   const [cards, setCards] = useState<CardActivationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'pending' | 'active'>('pending');
 
   const fetchCards = async () => {
     try {
@@ -100,9 +101,12 @@ export default function AdminCardsPage() {
   };
 
   const filteredCards = cards.filter(c => 
-    c.user.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase()) ||
-    c.cardId.toLowerCase().includes(search.toLowerCase())
+    (activeTab === 'pending' ? c.status === 'PENDING' : c.status !== 'PENDING') &&
+    (
+      c.user.toLowerCase().includes(search.toLowerCase()) ||
+      c.email.toLowerCase().includes(search.toLowerCase()) ||
+      c.cardId.toLowerCase().includes(search.toLowerCase())
+    )
   );
 
   if (loading) {
@@ -117,7 +121,7 @@ export default function AdminCardsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">All User Cards</h1>
+        <h1 className="text-2xl font-bold">Manage User Cards</h1>
         <div className="relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -128,6 +132,29 @@ export default function AdminCardsPage() {
             className="pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
           />
         </div>
+      </div>
+
+      <div className="flex space-x-2 border-b border-gray-800">
+        <button
+          onClick={() => setActiveTab('pending')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'pending'
+              ? 'border-emerald-500 text-emerald-400'
+              : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          Pending Requests
+        </button>
+        <button
+          onClick={() => setActiveTab('active')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'active'
+              ? 'border-emerald-500 text-emerald-400'
+              : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          Approved & Restricted
+        </button>
       </div>
 
       <div className="glass-card rounded-xl overflow-hidden border border-gray-800">
@@ -145,8 +172,8 @@ export default function AdminCardsPage() {
             <tbody>
               {filteredCards.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-gray-500 bg-gray-900/10">
-                    No pending card activations found.
+                  <td colSpan={5} className="py-12 text-center text-gray-500 bg-gray-900/10">
+                    No {activeTab === 'pending' ? 'pending' : 'approved or restricted'} cards found.
                   </td>
                 </tr>
               ) : (
