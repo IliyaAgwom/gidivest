@@ -20,7 +20,7 @@ export default function AdminCardsPage() {
 
   const fetchCards = async () => {
     try {
-      const res = await fetch('/api/admin/card');
+      const res = await fetch('/api/admin/card', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setCards(data);

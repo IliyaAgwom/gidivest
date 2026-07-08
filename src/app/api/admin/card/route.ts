@@ -15,6 +15,8 @@ async function getUserFromRequest(req: NextRequest) {
   }
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getUserFromRequest(req);
