@@ -4,15 +4,18 @@ import bcrypt from "bcryptjs";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const userId = params.id;
+    const { id: userId } = await Promise.resolve(params);
     const body = await req.json();
     
-    // Allow updating banned status, wallet balance, or password
     const updateData: any = {};
-    if (typeof body.banned === "boolean") updateData.banned = body.banned;
-    if (typeof body.walletBalance === "number") updateData.walletBalance = body.walletBalance;
+    if (body.banned !== undefined) updateData.banned = Boolean(body.banned);
+    if (body.walletBalance !== undefined) updateData.walletBalance = Number(body.walletBalance);
     if (body.password) {
-      updateData.passwordHash = await bcrypt.hash(body.password, 10);
+      updateData.passwordHash = await bcrypt.hash(String(body.password), 12);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No valid fields provided for update" }, { status: 400 });
     }
 
     const user = await prisma.user.update({
@@ -22,6 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     return NextResponse.json(user);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Prisma update error:", error);
+    return NextResponse.json({ error: error.message || "Failed to update user" }, { status: 500 });
   }
 }
