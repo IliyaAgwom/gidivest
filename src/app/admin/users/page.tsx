@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Ban, CheckCircle, Loader2, DollarSign } from "lucide-react";
+import { Users, Ban, CheckCircle, Loader2, DollarSign, Key } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type User = {
@@ -49,6 +49,31 @@ export default function AdminUsersPage() {
       await fetchUsers();
     } catch (error) {
       console.error(error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const resetPassword = async (id: string, name: string) => {
+    const newPassword = window.prompt(`Enter new password for ${name || "this user"}:`);
+    if (!newPassword) return;
+    
+    setActionLoading(`pwd-${id}`);
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      if (res.ok) {
+        alert("Password updated successfully.");
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to update password");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An unexpected error occurred.");
     } finally {
       setActionLoading(null);
     }
@@ -117,6 +142,15 @@ export default function AdminUsersPage() {
                     )}
                   </td>
                   <td className="p-4 flex justify-end gap-2">
+                    <button
+                      disabled={actionLoading === `pwd-${user.id}`}
+                      onClick={() => resetPassword(user.id, user.name)}
+                      className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/30"
+                      title="Reset Password"
+                    >
+                      {actionLoading === `pwd-${user.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Key className="w-3 h-3" />}
+                      <span>Reset Pwd</span>
+                    </button>
                     <button
                       disabled={actionLoading === user.id || user.role === "ADMIN"}
                       onClick={() => toggleBan(user.id, user.banned)}
