@@ -74,7 +74,7 @@ export default function AdminChatPage() {
 
       <div className="bg-navy-800 rounded-2xl border border-navy-700 overflow-hidden flex" style={{ height: "600px" }}>
         {/* Inbox */}
-        <div className="w-72 border-r border-navy-700 flex flex-col shrink-0">
+        <div className={`w-full md:w-72 border-r border-navy-700 flex-col shrink-0 ${selected ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-navy-700">
             <p className="text-sm font-semibold text-white flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-emerald-400" /> Conversations
@@ -109,7 +109,7 @@ export default function AdminChatPage() {
         </div>
 
         {/* Chat panel */}
-        <div className="flex-1 flex flex-col">
+        <div className={`flex-1 flex-col ${!selected ? 'hidden md:flex' : 'flex'}`}>
           {!selected ? (
             <div className="flex-1 flex flex-col items-center justify-center text-navy-400 gap-3">
               <MessageCircle className="w-10 h-10 opacity-30" />
