@@ -102,19 +102,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send Email
-    if (action === 'approve') {
-      await sendEmail({
-        to: cryptoCard.user.email,
-        subject: 'Crypto Card Activated',
-        html: getApprovalEmailHtml(cryptoCard.user.name || 'Investor', 'Crypto Card', `Your Crypto Card (${cardId}) is now active and ready to use.`)
-      });
-    } else if (action === 'reject') {
-      await sendEmail({
-        to: cryptoCard.user.email,
-        subject: 'Crypto Card Rejected',
-        html: getRejectionEmailHtml(cryptoCard.user.name || 'Investor', 'Crypto Card', `Your request for Crypto Card (${cardId}) was rejected.`)
-      });
+    // Send Email (fail-safe)
+    try {
+      if (action === 'approve') {
+        await sendEmail({
+          to: cryptoCard.user.email,
+          subject: 'Crypto Card Activated',
+          html: getApprovalEmailHtml(cryptoCard.user.name || 'Investor', 'Crypto Card', `Your Crypto Card (${cardId}) is now active and ready to use.`)
+        });
+      } else if (action === 'reject') {
+        await sendEmail({
+          to: cryptoCard.user.email,
+          subject: 'Crypto Card Rejected',
+          html: getRejectionEmailHtml(cryptoCard.user.name || 'Investor', 'Crypto Card', `Your request for Crypto Card (${cardId}) was rejected.`)
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send notification email:', emailError);
     }
 
     return NextResponse.json({ 
