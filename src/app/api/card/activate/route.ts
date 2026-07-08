@@ -38,11 +38,32 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    let card = user.cryptoCards[0] || null;
+
+    if (card && card.pendingDepositAt && card.pendingDepositAmount) {
+      const now = new Date();
+      const diffHours = (now.getTime() - new Date(card.pendingDepositAt).getTime()) / (1000 * 60 * 60);
+      
+      if (diffHours >= 48) {
+        // Auto-credit the card
+        const updatedCard = await prisma.cryptoCard.update({
+          where: { id: card.id },
+          data: {
+            cardBalance: { increment: card.pendingDepositAmount },
+            pendingDepositAmount: null,
+            pendingDepositTxHash: null,
+            pendingDepositAt: null,
+          }
+        });
+        card = updatedCard;
+      }
+    }
+
     return NextResponse.json({
       verificationStatus: user.verificationStatus,
       userName: user.name || 'Valued Member',
       walletBalance: user.walletBalance,
-      card: user.cryptoCards[0] || null,
+      card,
     });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

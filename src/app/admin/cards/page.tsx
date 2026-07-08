@@ -43,7 +43,8 @@ export default function AdminCardsPage() {
         body: JSON.stringify({ cardId: cId, action: 'approve' }),
       });
       if (res.ok) {
-        setCards(prev => prev.filter(c => c.id !== id));
+        const data = await res.json();
+        setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
       }
     } catch (err) {
       console.error(err);
@@ -58,7 +59,8 @@ export default function AdminCardsPage() {
         body: JSON.stringify({ cardId: cId, action: 'reject' }),
       });
       if (res.ok) {
-        setCards(prev => prev.filter(c => c.id !== id));
+        const data = await res.json();
+        setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
       }
     } catch (err) {
       console.error(err);
@@ -73,7 +75,24 @@ export default function AdminCardsPage() {
         body: JSON.stringify({ cardId: cId, action: 'restrict' }),
       });
       if (res.ok) {
-        setCards(prev => prev.filter(c => c.id !== id));
+        const data = await res.json();
+        setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUnrestrict = async (id: string, cId: string) => {
+    try {
+      const res = await fetch('/api/admin/card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: cId, action: 'unrestrict' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCards(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
       }
     } catch (err) {
       console.error(err);
@@ -98,7 +117,7 @@ export default function AdminCardsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Pending Card Activations</h1>
+        <h1 className="text-2xl font-bold">All User Cards</h1>
         <div className="relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -118,6 +137,7 @@ export default function AdminCardsPage() {
               <tr className="border-b border-gray-800 bg-gray-900/50">
                 <th className="py-4 px-6 font-semibold text-sm text-gray-400">User</th>
                 <th className="py-4 px-6 font-semibold text-sm text-gray-400">Card ID</th>
+                <th className="py-4 px-6 font-semibold text-sm text-gray-400">Status</th>
                 <th className="py-4 px-6 font-semibold text-sm text-gray-400">Requested On</th>
                 <th className="py-4 px-6 font-semibold text-sm text-gray-400 text-right">Actions</th>
               </tr>
@@ -142,30 +162,66 @@ export default function AdminCardsPage() {
                         <span className="font-mono text-sm bg-gray-950 px-2.5 py-1 rounded border border-gray-800 text-gray-200">{c.cardId}</span>
                       </div>
                     </td>
+                    <td className="py-4 px-6">
+                      {c.status === 'PENDING' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Pending</span>
+                      )}
+                      {c.status === 'ACTIVE' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
+                      )}
+                      {c.status === 'RESTRICTED' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">Restricted</span>
+                      )}
+                      {c.status === 'INACTIVE' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-500/10 text-gray-400 border border-gray-500/20">Inactive</span>
+                      )}
+                    </td>
                     <td className="py-4 px-6 text-sm text-gray-400">{c.date}</td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => handleReject(c.id, c.cardId)}
-                          className="p-2 rounded-lg text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-                          title="Reject"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleRestrict(c.id, c.cardId)}
-                          className="p-2 rounded-lg text-gray-400 hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
-                          title="Restrict"
-                        >
-                          <ShieldOff className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleApprove(c.id, c.cardId)}
-                          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
-                          title="Approve"
-                        >
-                          <Check className="w-5 h-5" />
-                        </button>
+                        {c.status === 'PENDING' && (
+                          <>
+                            <button
+                              onClick={() => handleReject(c.id, c.cardId)}
+                              className="p-2 rounded-lg text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                              title="Reject"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleRestrict(c.id, c.cardId)}
+                              className="p-2 rounded-lg text-gray-400 hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
+                              title="Restrict"
+                            >
+                              <ShieldOff className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleApprove(c.id, c.cardId)}
+                              className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
+                              title="Approve"
+                            >
+                              <Check className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                        {c.status === 'ACTIVE' && (
+                          <button
+                            onClick={() => handleRestrict(c.id, c.cardId)}
+                            className="p-2 rounded-lg text-gray-400 hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
+                            title="Restrict"
+                          >
+                            <ShieldOff className="w-5 h-5" />
+                          </button>
+                        )}
+                        {c.status === 'RESTRICTED' && (
+                          <button
+                            onClick={() => handleUnrestrict(c.id, c.cardId)}
+                            className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
+                            title="Unrestrict & Activate"
+                          >
+                            <Check className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

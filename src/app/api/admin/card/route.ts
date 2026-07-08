@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
     }
 
     const pendingCards = await prisma.cryptoCard.findMany({
-      where: { status: 'PENDING' },
       include: {
         user: {
           select: {
@@ -41,7 +40,7 @@ export async function GET(req: NextRequest) {
       email: card.user.email,
       cardId: card.cardId,
       date: card.createdAt.toISOString().split('T')[0],
-      status: 'pending',
+      status: card.status,
     }));
 
     return NextResponse.json(cards);
@@ -63,11 +62,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Card ID and action are required' }, { status: 400 });
     }
 
-    if (action !== 'approve' && action !== 'reject' && action !== 'restrict') {
+    if (action !== 'approve' && action !== 'reject' && action !== 'restrict' && action !== 'unrestrict') {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
-    const newStatus = action === 'approve' ? 'ACTIVE' : action === 'restrict' ? 'RESTRICTED' : 'INACTIVE';
+    const newStatus = action === 'approve' || action === 'unrestrict' ? 'ACTIVE' : action === 'restrict' ? 'RESTRICTED' : 'INACTIVE';
 
     const cryptoCard = await prisma.cryptoCard.findFirst({
       where: { cardId },
@@ -86,11 +85,13 @@ export async function POST(req: NextRequest) {
     });
 
     // Create a notification for the user
-    const title = action === 'approve' ? 'Card Activated' : action === 'restrict' ? 'Card Restricted' : 'Card Activation Rejected';
+    const title = action === 'approve' ? 'Card Activated' : action === 'restrict' ? 'Card Restricted' : action === 'unrestrict' ? 'Card Unrestricted' : 'Card Activation Rejected';
     const message = action === 'approve'
       ? `Your Crypto Card (${cardId}) has been successfully activated!`
       : action === 'restrict'
       ? `Your Crypto Card (${cardId}) has been restricted. Please contact support.`
+      : action === 'unrestrict'
+      ? `Your Crypto Card (${cardId}) has been unrestricted and is now active.`
       : `Your request to activate card ${cardId} was rejected.`;
 
     await prisma.notification.create({

@@ -119,11 +119,14 @@ model CryptoCard {
   id          String     @id @default(uuid())
   userId      String
   user        User       @relation(fields: [userId], references: [id])
-  cardId      String     // Platform-issued card ID
-  status      CardStatus @default(PENDING)
-  cardBalance Float      @default(0.0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  cardId               String     // Platform-issued card ID
+  status               CardStatus @default(PENDING)
+  cardBalance          Float      @default(0.0)
+  pendingDepositAmount Float?
+  pendingDepositTxHash String?
+  pendingDepositAt     DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
 }
 
 model ChatMessage {

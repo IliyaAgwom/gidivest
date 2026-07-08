@@ -18,6 +18,8 @@ interface CardDetails {
   status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'RESTRICTED';
   cardBalance: number;
   createdAt: string;
+  pendingDepositAmount?: number;
+  pendingDepositAt?: string;
 }
 
 type TransferStep = 'idle' | 'awaiting_payment' | 'submitted';
@@ -40,6 +42,8 @@ export default function CardPage() {
   const [txHash,        setTxHash]        = useState('');
   const [copied,        setCopied]        = useState(false);
   const [transferError, setTransferError] = useState('');
+  const [isSubmitting,  setIsSubmitting]  = useState(false);
+  const [timeLeft,      setTimeLeft]      = useState('');
 
   const fetchCardStatus = useCallback(async () => {
     try {
@@ -59,6 +63,28 @@ export default function CardPage() {
   }, []);
 
   useEffect(() => { fetchCardStatus(); }, [fetchCardStatus]);
+
+  useEffect(() => {
+    if (!card?.pendingDepositAt) return;
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const depositTime = new Date(card.pendingDepositAt!).getTime();
+      const targetTime = depositTime + 48 * 60 * 60 * 1000;
+      const diff = targetTime - now;
+
+      if (diff <= 0) {
+        setTimeLeft('Processing...');
+        clearInterval(interval);
+        // optionally refresh card
+      } else {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [card?.pendingDepositAt]);
 
   const handleActivate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,14 +117,37 @@ export default function CardPage() {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleTransferSubmit = (e: React.FormEvent) => {
+  const handleTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTransferError('');
     if (!txHash.trim()) {
       setTransferError('Please paste your BTC transaction ID / hash.');
       return;
     }
-    setTransferStep('submitted');
+    if (!transferAmount || isNaN(Number(transferAmount))) {
+      setTransferError('Please enter a valid amount.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/card/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: transferAmount, txHash }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTransferStep('submitted');
+        fetchCardStatus(); // Refresh to get the pending deposit
+      } else {
+        setTransferError(data.error || 'Failed to submit transfer.');
+      }
+    } catch (err) {
+      setTransferError('An unexpected error occurred.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   /* ────── Loading ────── */
@@ -171,9 +220,9 @@ export default function CardPage() {
             </div>
           </div>
           <div className="space-y-2 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-white">Card Restricted</h2>
+            <h2 className="text-2xl font-bold text-white">Card Restricted or Frozen</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Your Crypto Card has been temporarily restricted by our compliance team. Please contact support via the chat widget below for assistance.
+              Your Crypto Card has been temporarily restricted by our compliance team. This status will take <strong className="text-white">7 working days</strong> to review. Please contact support via the chat widget below for further assistance.
             </p>
           </div>
           <div className="pt-2 flex justify-center">
@@ -351,10 +400,11 @@ export default function CardPage() {
                     )}
                     <button
                       type="submit"
-                      className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2"
+                      disabled={isSubmitting}
+                      className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <ArrowRight className="w-5 h-5" />
-                      Confirm Payment & Request Transfer
+                      {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                      {isSubmitting ? 'Processing...' : 'Confirm Payment & Request Transfer'}
                     </button>
                   </form>
                 </div>
@@ -431,14 +481,36 @@ export default function CardPage() {
 
           {/* Info + actions */}
           <div className="space-y-4">
-            {/* Move Balance to Card */}
-            <button
-              onClick={() => setTransferStep('awaiting_payment')}
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-2xl font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center gap-3 text-lg"
-            >
-              <Wallet className="w-6 h-6" />
-              Move Balance to Card
-            </button>
+            {/* Move Balance to Card or Pending Deposit */}
+            {card.pendingDepositAmount ? (
+              <div className="glass-card rounded-2xl p-6 border border-amber-500/30 space-y-3 bg-amber-500/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-amber-500/20 rounded-full blur-xl pointer-events-none" />
+                <h3 className="text-lg font-semibold text-amber-500 flex items-center space-x-2">
+                  <Activity className="w-5 h-5 animate-pulse" />
+                  <span>Pending Deposit</span>
+                </h3>
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-sm text-gray-400">Amount</p>
+                    <p className="text-xl font-bold text-white">${card.pendingDepositAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400 mb-1">Estimated Arrival</p>
+                    <div className="font-mono text-sm bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-800 text-amber-400">
+                      {timeLeft || 'Calculating...'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setTransferStep('awaiting_payment')}
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-2xl font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center gap-3 text-lg"
+              >
+                <Wallet className="w-6 h-6" />
+                Move Balance to Card
+              </button>
+            )}
 
             {/* Card details panel */}
             <div className="glass-card rounded-2xl p-6 border border-gray-800 space-y-4">
