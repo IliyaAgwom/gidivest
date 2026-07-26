@@ -18,6 +18,8 @@ node_modules/
 *.pem
 .node_tmp/
 output.css
+cookies.txt
+test-email.ts
 
 # Debug
 npm-debug.log*

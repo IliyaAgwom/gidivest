@@ -95,11 +95,12 @@ model Notification {
 }
 
 model AdminSetting {
-  id                String @id @default(uuid())
-  btcAddress        String @default("bc1q...")
-  ethAddress        String @default("0x...")
-  usdtAddress       String @default("0x...")
-  investmentPercent Float  @default(10.0)
+  id                String  @id @default(uuid())
+  btcAddress        String  @default("bc1q...")
+  ethAddress        String  @default("0x...")
+  usdtAddress       String  @default("0x...")
+  investmentPercent Float   @default(10.0)
+  maintenanceMode   Boolean @default(false)
 }
 
 model UserInvestment {

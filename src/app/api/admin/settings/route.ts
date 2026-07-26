@@ -31,6 +31,9 @@ export async function PATCH(req: NextRequest) {
         ethAddress: body.ethAddress ?? settings.ethAddress,
         usdtAddress: body.usdtAddress ?? settings.usdtAddress,
         investmentPercent: body.investmentPercent ?? settings.investmentPercent,
+        ...(typeof body.maintenanceMode === "boolean" && {
+          maintenanceMode: body.maintenanceMode,
+        }),
       }
     });
 

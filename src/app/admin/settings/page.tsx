@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings, Save, Loader2, Link2, Percent } from "lucide-react";
+import { Settings, Save, Loader2, Link2, Percent, ShieldAlert } from "lucide-react";
 
 type AdminSettings = {
   id: string;
@@ -9,12 +9,14 @@ type AdminSettings = {
   ethAddress: string;
   usdtAddress: string;
   investmentPercent: number;
+  maintenanceMode: boolean;
 };
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<AdminSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [togglingMaint, setTogglingMaint] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -54,12 +56,83 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const toggleMaintenance = async () => {
+    if (!settings) return;
+    setTogglingMaint(true);
+    try {
+      const newVal = !settings.maintenanceMode;
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maintenanceMode: newVal }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setSettings({ ...settings, maintenanceMode: newVal });
+    } catch {
+      setMessage("Failed to toggle maintenance mode.");
+    } finally {
+      setTogglingMaint(false);
+    }
+  };
+
   if (loading || !settings) {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
   }
 
   return (
     <div className="space-y-6 max-w-2xl">
+
+      {/* ── Maintenance Mode Card ── */}
+      <div className={`rounded-2xl border overflow-hidden transition-all ${
+        settings.maintenanceMode
+          ? "bg-amber-950/30 border-amber-700/50"
+          : "bg-navy-800 border-navy-700"
+      }`}>
+        <div className="p-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${
+              settings.maintenanceMode ? "bg-amber-500/20" : "bg-navy-700"
+            }`}>
+              <ShieldAlert className={`w-5 h-5 ${
+                settings.maintenanceMode ? "text-amber-400" : "text-navy-400"
+              }`} />
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">Maintenance Mode</p>
+              <p className="text-xs text-navy-400 mt-0.5">
+                {settings.maintenanceMode
+                  ? "Site is OFFLINE for regular users. Only admins can access."
+                  : "Site is live. Toggle to take it offline for users."}
+              </p>
+            </div>
+          </div>
+
+          {/* Toggle switch */}
+          <button
+            id="maintenance-toggle"
+            onClick={toggleMaintenance}
+            disabled={togglingMaint}
+            aria-pressed={settings.maintenanceMode}
+            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-navy-900 disabled:opacity-50 ${
+              settings.maintenanceMode
+                ? "bg-amber-500 border-amber-500 focus:ring-amber-500"
+                : "bg-navy-600 border-navy-600 focus:ring-emerald-500"
+            }`}
+          >
+            <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+              settings.maintenanceMode ? "translate-x-5" : "translate-x-0.5"
+            }`} />
+          </button>
+        </div>
+
+        {settings.maintenanceMode && (
+          <div className="px-5 pb-4 text-xs text-amber-400 font-medium flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            Maintenance mode is ACTIVE — regular users see the maintenance page.
+          </div>
+        )}
+      </div>
+
       <div>
         <h1 className="text-2xl font-bold text-white">Platform Settings</h1>
         <p className="text-navy-400">Configure global platform parameters and crypto wallets.</p>
