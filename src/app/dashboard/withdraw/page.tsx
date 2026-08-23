@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import {
-  AlertCircle, Clock, Zap, Loader2, CheckCircle,
+  Clock, Loader2, CheckCircle,
   Bitcoin, Copy, X, ArrowRight,
 } from "lucide-react";
 
@@ -32,30 +32,7 @@ export default function WithdrawPage() {
   const [copied, setCopied]       = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [finalMsg, setFinalMsg]   = useState("");
-  const [initialNoticeOpen, setInitialNoticeOpen] = useState(true);
 
-  /* ── countdown timer ── */
-  const [countdown, setCountdown] = useState(0);
-
-  useEffect(() => {
-    const targetDate = new Date('2026-10-16T23:59:59Z').getTime();
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const diff = Math.floor((targetDate - now) / 1000);
-      setCountdown(diff > 0 ? diff : 0);
-    };
-    updateTimer();
-    const timer = setInterval(updateTimer, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatCountdown = (secs: number) => {
-    const days = Math.floor(secs / (3600 * 24));
-    const hours = Math.floor((secs % (3600 * 24)) / 3600).toString().padStart(2, '0');
-    const minutes = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
-    const seconds = (secs % 60).toString().padStart(2, '0');
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-  };
 
   /* ── load user balance + admin settings ── */
   useEffect(() => {
@@ -162,83 +139,6 @@ export default function WithdrawPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-
-      {/* ═══════════════════════════════════════════════
-          INITIAL WITHDRAWAL SUSPENSION POPUP NOTICE
-      ═══════════════════════════════════════════════ */}
-      {initialNoticeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
-          <div className="relative bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-lg shadow-[0_0_50px_rgba(239,68,68,0.15)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setInitialNoticeOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="p-8 space-y-6">
-              <div className="text-center space-y-2">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/10 text-red-400 mb-2">
-                  <AlertCircle className="w-8 h-8 animate-pulse" />
-                </div>
-                <h3 className="text-2xl font-bold text-white tracking-tight">Withdrawal Suspension Notice</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  Standard withdrawals are currently suspended for the next 3 months due to compliance auditing and end-of-quarter portfolio reviews.
-                </p>
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col items-center justify-center mt-4">
-                  <span className="text-xs font-semibold text-red-400 uppercase tracking-wider mb-1">Standard suspension remaining:</span>
-                  <span className="font-mono text-xl font-extrabold text-red-400 tracking-wider">{formatCountdown(countdown)}</span>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-800 my-4" />
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-400" /> Need Fast Withdrawal?
-                </h4>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  To bypass the 3-month hold and initiate an <strong className="text-white">Express Withdrawal (24 hours)</strong>, compliance requires a security validation deposit of <strong className="text-white">${UNLOCK_AMOUNT.toLocaleString()} in BTC</strong>. This release fee is fully credited to your account or returned upon withdrawal release.
-                </p>
-
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-orange-400 flex items-center gap-1.5">
-                    <Bitcoin className="w-4 h-4" /> Send exactly ${UNLOCK_AMOUNT.toLocaleString()} BTC to:
-                  </p>
-                  <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-4 flex items-center gap-3">
-                    <p className="font-mono text-xs text-orange-300 break-all flex-1">{adminBtcAddress}</p>
-                    <button
-                      onClick={copyAddress}
-                      className="shrink-0 p-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded-lg transition-colors"
-                      title="Copy address"
-                    >
-                      {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => setInitialNoticeOpen(false)}
-                  className="flex-1 py-3 bg-gray-900 border border-gray-700 hover:bg-gray-800 text-white rounded-xl font-semibold transition-colors"
-                >
-                  Close & View Form
-                </button>
-                <button
-                  onClick={() => {
-                    setInitialNoticeOpen(false);
-                    setWithdrawalType("EXPRESS");
-                  }}
-                  className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2"
-                >
-                  <Zap className="w-4 h-4" />
-                  Request Express Bypass
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ═══════════════════════════════════════════════
           BTC UNLOCK MODAL
