@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Clock, Loader2, CheckCircle,
-  Bitcoin, Copy, X, ArrowRight,
+  Bitcoin, Copy, X, ArrowRight, AlertCircle, Zap,
 } from "lucide-react";
 
 const UNLOCK_AMOUNT = 4000;
@@ -32,6 +32,14 @@ export default function WithdrawPage() {
   const [copied, setCopied]       = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [finalMsg, setFinalMsg]   = useState("");
+
+  /* ── countdown: 90-day suspension timer ── */
+  const [countdown, setCountdown] = useState(90 * 24 * 60 * 60);
+
+  useEffect(() => {
+    const id = setInterval(() => setCountdown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(id);
+  }, []);
 
 
   /* ── load user balance + admin settings ── */
@@ -128,6 +136,14 @@ export default function WithdrawPage() {
     setTxHash("");
     setFormError("");
     setTxError("");
+  };
+
+  const formatCountdown = (seconds: number): string => {
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${d}d ${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
   };
 
   if (loading)
