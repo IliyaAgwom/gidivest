@@ -5,6 +5,7 @@ import { Send, Loader2 } from "lucide-react";
 
 export default function AdminMail() {
   const [audience, setAudience] = useState("all");
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,13 +16,22 @@ export default function AdminMail() {
       alert("Subject and body are required");
       return;
     }
+    if (audience === "specific" && !recipientEmail.trim()) {
+      alert("Please enter the recipient email address");
+      return;
+    }
 
     setLoading(true);
     try {
       const res = await fetch("/api/admin/mail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audience, subject, body }),
+        body: JSON.stringify({
+          audience,
+          recipientEmail: audience === "specific" ? recipientEmail : undefined,
+          subject,
+          body,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -30,6 +40,7 @@ export default function AdminMail() {
         alert(data.message || "Emails sent successfully!");
         setSubject("");
         setBody("");
+        setRecipientEmail("");
       }
     } catch (err: any) {
       alert("An error occurred");
@@ -57,8 +68,22 @@ export default function AdminMail() {
                <option value="starter">Starter Plan Members</option>
                <option value="pro">Professional Plan Members</option>
                <option value="elite">Elite Wealth Members</option>
+               <option value="specific">Specific User</option>
             </select>
           </div>
+
+          {audience === "specific" && (
+            <div>
+              <label className="block text-sm font-medium text-navy-300 mb-1">Recipient Email</label>
+              <input
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                className="block w-full px-4 py-3 border border-navy-700 rounded-xl bg-navy-900 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                placeholder="user@example.com"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-navy-300 mb-1">Subject Line</label>
